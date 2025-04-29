@@ -51,6 +51,52 @@ const createChat = async (req, res) => {
 };
 
 
+const createGroupChat = async (req, res) => {
+  const { userIds, message, chatName } = req.body;
+
+  try {
+    // Ensure the users exist
+    const users = await User.find({ '_id': { $in: userIds } });
+
+    if (users.length !== userIds.length) {
+      return res.status(404).json({
+        success: false,
+        message: 'One or more users not found'
+      });
+    }
+
+    // Create the group chat
+    const newChat = new Chat({
+      users: userIds,
+      chatName,
+      messages: [{
+        senderId: userIds[0], // Assuming the first user sends the first message
+        message,
+        timestamp: new Date()
+      }]
+    });
+
+    const savedChat = await newChat.save();
+
+    // 🛜 Emit new chat using socket.io
+    const io = req.app.get('socketio');
+    io.emit('new_chat', savedChat);
+
+    res.status(201).json({
+      success: true,
+      message: 'Group chat created successfully',
+      data: savedChat
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error creating group chat',
+      error: error.message
+    });
+  }
+};
+
+
 
 const getAllChats = async (req, res) => {
   try {
@@ -188,4 +234,4 @@ const deleteChat = async (req, res) => {
 
 
 
-module.exports = { createChat, getAllChats, searchChats, sendMessage, deleteChat };
+module.exports = { createChat, getAllChats, searchChats, sendMessage, deleteChat, createGroupChat };
