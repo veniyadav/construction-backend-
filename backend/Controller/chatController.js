@@ -6,8 +6,10 @@ const asyncHandler = require("express-async-handler");
 
 const createChat = async (req, res) => {
   const { userIds, message, chatName } = req.body;
+  
 
   try {
+    
     // Ensure the users exist
     const users = await User.find({ '_id': { $in: userIds } });
 
@@ -102,22 +104,30 @@ const getAllChats = async (req, res) => {
   try {
     const chats = await Chat.find()
       .populate('users', 'firstName lastName') // Populate user names
-      .populate('messages.senderId', 'firstName lastName') // Populate sender's name
-      .populate('messages.receiverId', 'firstName lastName') // Populate receiver's name
+      .populate({
+        path: 'messages',
+        populate: [
+          { path: 'senderId', select: 'firstName lastName' },  // Populate sender's name
+          { path: 'receiverId', select: 'firstName lastName' }, // Populate receiver's name
+        ],
+      })
       .sort({ 'messages.timestamp': -1 }); // Sort by latest message timestamp
+
+    console.log(chats);
 
     res.status(200).json({
       success: true,
-      data: chats
+      data: chats,
     });
   } catch (error) {
     res.status(500).json({
       success: false,
       message: 'Error fetching chats',
-      error: error.message
+      error: error.message,
     });
   }
 };
+
 
 
 const searchChats = async (req, res) => {
@@ -150,54 +160,125 @@ const searchChats = async (req, res) => {
 
 
 // Send Message Controller
-const sendMessage = asyncHandler(async (req, res) => {
-  const { chatId, senderId, receiverId, message } = req.body;
+// const sendMessage = asyncHandler(async (req, res) => {
+//   const { chatId, senderId, receiverId, message } = req.body;
 
  
 
-  try {
-    const chat = await Chat.findById(chatId);
+//   try {
+//     const chat = await Chat.findById(chatId);
 
-    if (!chat) {
-      return res.status(404).json({
+//     if (!chat) {
+//       return res.status(404).json({
+//         success: false,
+//         message: 'Chat not found'
+//       });
+//     }
+
+//     const newMessage = {
+//       senderId,
+//       receiverId,
+//       message,
+//       timestamp: new Date()
+//     };
+
+//     // Ensure that messages field exists and is an array
+//     if (!chat.messages) {
+//       chat.messages = [];
+//     }
+
+//     chat.messages.push(newMessage);
+//     await chat.save();
+
+//     // 🛜 Emit new message using socket.io
+//     const io = req.app.get('socketio');
+//     io.emit('new_message', { chatId, message: newMessage });
+
+//     res.status(200).json({
+//       success: true,
+//       message: 'Message sent successfully',
+//       data: chat
+//     });
+
+//   } catch (error) {
+//     res.status(500).json({
+//       success: false,
+//       message: 'Error sending message',
+//       error: error.message
+//     });
+//   }
+// });
+
+const sendMessage = asyncHandler(async (req, res) => {
+  const { senderId, receiverId, message } = req.body;
+
+  try {
+    // Ensure senderId and receiverId are valid
+    if (!senderId || !receiverId) {
+      return res.status(400).json({
         success: false,
-        message: 'Chat not found'
+        message: 'Sender ID and Receiver ID are required.',
       });
     }
 
+    if (!message || typeof message !== 'string') {
+      return res.status(400).json({
+        success: false,
+        message: 'Message must be a non-empty string.',
+      });
+    }
+
+    // Find an existing chat between the sender and receiver
+    let chat = await Chat.findOne({
+      users: { $all: [senderId, receiverId] },
+    });
+
+    // If no chat exists, create a new one
+    if (!chat) {
+      chat = new Chat({
+        users: [senderId, receiverId], // Array of user IDs
+        messages: [], // Initialize the messages array
+        chatName: `Chat between ${senderId} and ${receiverId}`, // Set a default chat name
+        status: 'active', // Set default status to active
+      });
+
+      await chat.save(); // Save the new chat
+    }
+
+    // Create the new message object
     const newMessage = {
       senderId,
       receiverId,
       message,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
 
-    // Ensure that messages field exists and is an array
-    if (!chat.messages) {
-      chat.messages = [];
-    }
-
+    // Add the new message to the chat's messages array
     chat.messages.push(newMessage);
+
+    // Save the updated chat with the new message
     await chat.save();
 
-    // 🛜 Emit new message using socket.io
+    // Emit the new message using socket.io
     const io = req.app.get('socketio');
-    io.emit('new_message', { chatId, message: newMessage });
+    io.emit('new_message', { message: newMessage });
 
     res.status(200).json({
       success: true,
       message: 'Message sent successfully',
-      data: chat
+      data: newMessage, // Return the new message as a response
     });
 
   } catch (error) {
+    console.error('Error creating chat or sending message:', error);
     res.status(500).json({
       success: false,
-      message: 'Error sending message',
-      error: error.message
+      message: 'Error creating chat or sending message',
+      error: error.message,
     });
   }
 });
+
 
 
 
@@ -228,9 +309,6 @@ const deleteChat = async (req, res) => {
     });
   }
 };
-
-
-
 
 
 
