@@ -11,6 +11,135 @@ cloudinary.config({
   api_secret: 'p12EKWICdyHWx8LcihuWYqIruWQ'
 });
 
+// const CalendarCreate = asyncHandler(async (req, res) => {
+//   let {
+//     taskTitle,
+//     description,
+//     project,
+//     taskType,
+//     startDate,
+//     endDate,
+//     color,
+//     reminders,
+//   } = req.body;
+
+//   let assignTeamMembers = [];
+
+//   // Parse team members from form-data fields
+//   for (const key in req.body) {
+//     if (key.startsWith("assignTeamMembers[")) {
+//       const match = key.match(/assignTeamMembers\[(\d+)\]\.(firstName|lastName)/);
+//       if (match) {
+//         const index = match[1];
+//         const field = match[2];
+
+//         assignTeamMembers[index] = assignTeamMembers[index] || {};
+//         assignTeamMembers[index][field] = req.body[key];
+//       }
+//     }
+//   }
+
+//   if (!taskTitle || !startDate || !endDate) {
+//     return res.status(400).json({
+//       success: false,
+//       message: "taskTitle, startDate, and endDate are required",
+//     });
+//   }
+
+//   // Resolve project ObjectId from name
+//   let projectId;
+//   if (mongoose.Types.ObjectId.isValid(project)) {
+//     projectId = mongoose.Types.ObjectId(project);
+//   } else {
+//     const foundProject = await Project.findOne({ name: project });
+//     if (!foundProject) {
+//       return res.status(400).json({ success: false, message: "Project not found" });
+//     }
+//     projectId = foundProject._id;
+//   }
+
+//   // Parse dates
+//   startDate = new Date(startDate.trim());
+//   endDate = new Date(endDate.trim());
+
+//   // Handle team members by matching firstName + lastName
+//   const resolvedTeam = [];
+//   for (const member of assignTeamMembers) {
+//     if (!member?.firstName || !member?.lastName) continue;
+
+//     const user = await User.findOne({ firstName: member.firstName, lastName: member.lastName });
+//     if (!user) {
+//       return res.status(400).json({
+//         success: false,
+//         message: `User not found: ${member.firstName} ${member.lastName}`,
+//       });
+//     }
+//     resolvedTeam.push(user._id);
+//   }
+
+//   // Handle image uploads (if any)
+//   let imageUrls = [];
+//   if (req.files && req.files.image) {
+//     const files = Array.isArray(req.files.image) ? req.files.image : [req.files.image];
+//     for (const file of files) {
+//       const uploadResult = await cloudinary.uploader.upload(file.tempFilePath, {
+//         folder: "calendar_uploads",
+//         resource_type: "image",
+//       });
+//       if (uploadResult.secure_url) {
+//         imageUrls.push(uploadResult.secure_url);
+//       }
+//     }
+//   }
+
+//   // Default reminders to string
+//   reminders = reminders || "";
+
+//   try {
+//     const newCalendar = new Calendar({
+//       taskTitle,
+//       description,
+//       project: projectId,
+//       taskType,
+//       startDate,
+//       endDate,
+//       assignTeamMembers: resolvedTeam,
+//       image: imageUrls,
+//       reminders,
+//       color,
+//     });
+
+//     await newCalendar.save();
+
+//     // Populate user info
+//     const populatedCalendar = await Calendar.findById(newCalendar._id).populate(
+//       "assignTeamMembers",
+//       "firstName lastName"
+//     );
+
+//     const calendar = populatedCalendar.toObject();
+//     calendar.assignTeamMembers = calendar.assignTeamMembers.map((member) => ({
+//       id: member._id.toString(),
+//       firstName: member.firstName,
+//       lastName: member.lastName,
+//     }));
+
+//     res.status(201).json({
+//       success: true,
+//       message: "Calendar entry created successfully",
+//       calendar,
+//     });
+//   } catch (error) {
+//     console.error("Error creating calendar entry:", error);
+//     res.status(500).json({
+//       success: false,
+//       message: "An error occurred while creating the calendar entry",
+//       error: error.message,
+//     });
+//   }
+// });
+
+
 const CalendarCreate = asyncHandler(async (req, res) => {
   let {
     taskTitle,
@@ -23,22 +152,15 @@ const CalendarCreate = asyncHandler(async (req, res) => {
     reminders,
   } = req.body;
 
-  let assignTeamMembers = [];
-
-  // Parse team members from form-data fields
-  for (const key in req.body) {
-    if (key.startsWith("assignTeamMembers[")) {
-      const match = key.match(/assignTeamMembers\[(\d+)\]\.(firstName|lastName)/);
-      if (match) {
-        const index = match[1];
-        const field = match[2];
-
-        assignTeamMembers[index] = assignTeamMembers[index] || {};
-        assignTeamMembers[index][field] = req.body[key];
-      }
-    }
+  // Parse team member IDs from form-data
+  let assignTeamMembers = req.body["assignTeamMembers[]"];
+  if (!assignTeamMembers) {
+    assignTeamMembers = [];
+  } else if (!Array.isArray(assignTeamMembers)) {
+    assignTeamMembers = [assignTeamMembers]; // Ensure it's an array even for single value
   }
 
+  // Validate required fields
   if (!taskTitle || !startDate || !endDate) {
     return res.status(400).json({
       success: false,
@@ -46,7 +168,7 @@ const CalendarCreate = asyncHandler(async (req, res) => {
     });
   }
 
-  // Resolve project ObjectId from name
+  // Resolve project ID
   let projectId;
   if (mongoose.Types.ObjectId.isValid(project)) {
     projectId = mongoose.Types.ObjectId(project);
@@ -62,16 +184,14 @@ const CalendarCreate = asyncHandler(async (req, res) => {
   startDate = new Date(startDate.trim());
   endDate = new Date(endDate.trim());
 
-  // Handle team members by matching firstName + lastName
+  // Validate and resolve team members
   const resolvedTeam = [];
-  for (const member of assignTeamMembers) {
-    if (!member?.firstName || !member?.lastName) continue;
-
-    const user = await User.findOne({ firstName: member.firstName, lastName: member.lastName });
+  for (const userId of assignTeamMembers) {
+    const user = await User.findById(userId);
     if (!user) {
       return res.status(400).json({
         success: false,
-        message: `User not found: ${member.firstName} ${member.lastName}`,
+        message: `User not found with ID: ${userId}`,
       });
     }
     resolvedTeam.push(user._id);
@@ -92,7 +212,6 @@ const CalendarCreate = asyncHandler(async (req, res) => {
     }
   }
 
-  // Default reminders to string
   reminders = reminders || "";
 
   try {
@@ -111,7 +230,6 @@ const CalendarCreate = asyncHandler(async (req, res) => {
 
     await newCalendar.save();
 
-    // Populate user info
     const populatedCalendar = await Calendar.findById(newCalendar._id).populate(
       "assignTeamMembers",
       "firstName lastName"
@@ -138,6 +256,8 @@ const CalendarCreate = asyncHandler(async (req, res) => {
     });
   }
 });
+
+
 
 
 const AllCalendar = async (req, res) => {
@@ -226,20 +346,12 @@ const AllCalendar = async (req, res) => {
         reminders,
       } = req.body;
   
-      let assignTeamMembers = [];
-  
-      // Parse team members from form-data fields
-      for (const key in req.body) {
-        if (key.startsWith("assignTeamMembers[")) {
-          const match = key.match(/assignTeamMembers\[(\d+)\]\.(firstName|lastName)/);
-          if (match) {
-            const index = match[1];
-            const field = match[2];
-  
-            assignTeamMembers[index] = assignTeamMembers[index] || {};
-            assignTeamMembers[index][field] = req.body[key];
-          }
-        }
+      // Parse team member IDs from form-data
+      let assignTeamMembers = req.body["assignTeamMembers[]"];
+      if (!assignTeamMembers) {
+        assignTeamMembers = [];
+      } else if (!Array.isArray(assignTeamMembers)) {
+        assignTeamMembers = [assignTeamMembers]; // Ensure it's an array even for single value
       }
   
       // Validate required fields
@@ -250,7 +362,7 @@ const AllCalendar = async (req, res) => {
         });
       }
   
-      // Resolve project ObjectId from name
+      // Resolve project ObjectId
       let projectId;
       if (mongoose.Types.ObjectId.isValid(project)) {
         projectId = mongoose.Types.ObjectId(project);
@@ -266,16 +378,14 @@ const AllCalendar = async (req, res) => {
       const parsedStartDate = new Date(startDate.trim());
       const parsedEndDate = new Date(endDate.trim());
   
-      // Handle team members by matching firstName + lastName
+      // Validate and resolve team members
       const resolvedTeam = [];
-      for (const member of assignTeamMembers) {
-        if (!member?.firstName || !member?.lastName) continue;
-  
-        const user = await User.findOne({ firstName: member.firstName, lastName: member.lastName });
+      for (const userId of assignTeamMembers) {
+        const user = await User.findById(userId);
         if (!user) {
           return res.status(400).json({
             success: false,
-            message: `User not found: ${member.firstName} ${member.lastName}`,
+            message: `User not found with ID: ${userId}`,
           });
         }
         resolvedTeam.push(user._id);
@@ -296,22 +406,9 @@ const AllCalendar = async (req, res) => {
         }
       }
   
-      // Default reminders to string
       const finalReminders = reminders || "";
   
-      const updateData = {
-        taskTitle,
-        description,
-        project: projectId,
-        taskType,
-        startDate: parsedStartDate,
-        endDate: parsedEndDate,
-        assignTeamMembers: resolvedTeam,
-        image: imageUrls,
-        reminders: finalReminders,
-        color,
-      };
-  
+      // Find calendar entry by ID
       const calendarEntry = await Calendar.findById(req.params.id);
       if (!calendarEntry) {
         return res.status(404).json({
@@ -320,12 +417,23 @@ const AllCalendar = async (req, res) => {
         });
       }
   
-      // Update the calendar entry
-      Object.assign(calendarEntry, updateData);
+      // Update fields
+      calendarEntry.taskTitle = taskTitle;
+      calendarEntry.description = description;
+      calendarEntry.project = projectId;
+      calendarEntry.taskType = taskType;
+      calendarEntry.startDate = parsedStartDate;
+      calendarEntry.endDate = parsedEndDate;
+      calendarEntry.assignTeamMembers = resolvedTeam;
+      calendarEntry.reminders = finalReminders;
+      calendarEntry.color = color;
+      if (imageUrls.length > 0) {
+        calendarEntry.image = imageUrls;
+      }
   
       await calendarEntry.save();
   
-      // Populate user info for assigned team members
+      // Populate user info
       const populatedCalendar = await Calendar.findById(calendarEntry._id).populate(
         "assignTeamMembers",
         "firstName lastName"
@@ -352,6 +460,7 @@ const AllCalendar = async (req, res) => {
       });
     }
   });
+  
   
   
 
