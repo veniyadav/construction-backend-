@@ -9,7 +9,7 @@ router.get('/',getAllChats)
 
 router.get('/:searchTerm',searchChats)
 
-router.patch('/',sendMessage)
+router.post('/sendMessage',sendMessage)
 
 router.delete('/:id',deleteChat)
 
