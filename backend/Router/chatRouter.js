@@ -1,5 +1,5 @@
 const express=require('express');
-const { createChat, getAllChats, searchChats, sendMessage, deleteChat  } = require('../Controller/chatController');
+const { createChat, getAllChats, searchChats, sendMessage, deleteChat, createGroupChat } = require('../Controller/chatController');
 
 const router = express.Router()
 
