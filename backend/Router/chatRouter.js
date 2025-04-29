@@ -13,5 +13,7 @@ router.patch('/',sendMessage)
 
 router.delete('/:id',deleteChat)
 
+router.post('/',createGroupChat)
+
 
 module.exports = router 
