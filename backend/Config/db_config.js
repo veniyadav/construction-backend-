@@ -8,6 +8,5 @@ const DBconnect=async()=>{
         console.log(error);
     }
 }
-//summy
 
 module.exports ={DBconnect}
