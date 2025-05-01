@@ -88,4 +88,8 @@ routerapi.use('/api/userInfo', require('./Router/Superadmin/UserInfoRouter'));
 routerapi.use("/api/planPackage",require("./Router/Superadmin/PlanPackageRouter"))
 // PlanRequest
 routerapi.use("/api/planRequest",require("./Router/Superadmin/PlanRequestRouter"))
+// superadmin dashboard
+routerapi.use('/api/superadmindashboard', require('./Router/superadminDashboardRouter'));
+
 module.exports = routerapi
+
