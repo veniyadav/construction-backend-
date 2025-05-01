@@ -71,11 +71,9 @@ userSchema.pre('save', async function(next) {
   next();
 });
 
-
 userSchema.methods.correctPassword = async function(candidatePassword, userPassword) {
   return await bcrypt.compare(candidatePassword, userPassword);
 };
-
 
 userSchema.pre('save', function(next) {
   this.updatedAt = Date.now();
