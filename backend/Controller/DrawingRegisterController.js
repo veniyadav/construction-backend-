@@ -18,8 +18,9 @@ const DrawingRegisterCreate = asyncHandler(async (req, res) => {
     documentTitle,
     documentType,
     folder,
-    assignedTo, // This should be a user ObjectId
-    comments
+    assignedTo, 
+    comments,
+    status
   } = req.body;
 
   try {
@@ -56,8 +57,9 @@ const DrawingRegisterCreate = asyncHandler(async (req, res) => {
       documentTitle,
       documentType,
       folder,
-      assignedTo,  // Ensure assignedTo is a valid ObjectId
+      assignedTo,  
       comments,
+      status,
       image: imageUrls,
     });
 

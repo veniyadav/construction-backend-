@@ -19,6 +19,10 @@ const DrawingRegisterSchema = new mongoose.Schema({
     ref: 'User',
     required: true,
   },
+  status:{
+    type:String,
+    required:true, 
+  },
   comments:{
     type:String,
     required:true,
