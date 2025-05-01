@@ -82,4 +82,6 @@ routerapi.use('/api/complete', require('./Router/completeRouter'));
 
 routerapi.use('/api/dashboard', require('./Router/dashboardRouter'));
 
+routerapi.use('/api/superadmindashboard', require('./Router/superadminDashboardRouter'));
+
 module.exports = routerapi

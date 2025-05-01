@@ -98,8 +98,6 @@ const DefectCreate = asyncHandler(async (req, res) => {
   });
 
 
-
-
   
   //GET SINGLE AllProjects
   //METHOD:GET
@@ -218,9 +216,6 @@ const UpdateDefect = asyncHandler(async (req, res) => {
           res.status(404).json({msg:"Can t Find Diaries"} )
       }
   }
-
-
-
 
 
 

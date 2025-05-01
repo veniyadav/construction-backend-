@@ -29,21 +29,30 @@ const ProjectsCreate = asyncHandler(async (req, res) => {
 //METHOD:GET
 const Allprojects = async (req, res) => {
   try {
-    const allProjects = await Projects.find(); 
+    const allProjects = await Projects.find().populate('assignedTo', 'firstName lastName');
+
     if (!allProjects || allProjects.length === 0) {
       return res.status(404).json({ message: "No projects found" });
     }
+
     const modifiedProjects = allProjects.map(project => {
+      const user = project.assignedTo;
       return {
         ...project.toObject(),
-        assignedTo: project.assignedTo.toString(), 
+        assignedTo: user ? {
+          id: user._id.toString(),
+          firstName: user.firstName,
+          lastName: user.lastName
+        } : null
       };
     });
+
     res.json(modifiedProjects);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
+
 
 
     //GET SINGLE DeleteProjects
@@ -118,19 +127,28 @@ const projectsUpdate = async (req, res) => {
 // DESC: Get 10 projects assigned to a specific user
 const projectsSingle = async (req, res) => {
   try {
-    const assignedUserId = req.params.id;
+    const projectId = req.params.id;
 
-    const projects = await Projects.find({ assignedTo: assignedUserId })
-      .limit(10)
-      .sort({ createdAt: -1 }); // latest first (optional)
+    const project = await Projects.findById(projectId)
+      .populate('assignedTo', 'firstName lastName');
 
-    if (!projects || projects.length === 0) {
-      return res.status(404).json({ message: "No projects found for this user" });
+    if (!project) {
+      return res.status(404).json({ message: "Project not found" });
     }
 
-    res.status(200).json(projects);
+    const user = project.assignedTo;
+    const modifiedProject = {
+      ...project.toObject(),
+      assignedTo: user ? {
+        id: user._id.toString(),
+        firstName: user.firstName,
+        lastName: user.lastName
+      } : null
+    };
+
+    res.status(200).json(modifiedProject);
   } catch (error) {
-    res.status(500).json({ message: "Server error", error });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 

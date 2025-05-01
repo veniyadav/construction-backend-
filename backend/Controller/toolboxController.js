@@ -20,10 +20,9 @@ const createToolboxTalk = async (req, res) => {
 
     let imageUrl = "";
 
-    // Handle Cloudinary image upload
+    // Upload image to Cloudinary
     if (req.files && req.files.image) {
       const imageFile = req.files.image;
-
       const uploadResult = await cloudinary.uploader.upload(imageFile.tempFilePath, {
         folder: "toolbox-talks",
         resource_type: "image",
@@ -34,38 +33,8 @@ const createToolboxTalk = async (req, res) => {
       }
     }
 
-    // Parse participant names
-    let fullNames = [];
-
-    if (Array.isArray(participants)) {
-      fullNames = participants;
-    } else if (typeof participants === "string") {
-      fullNames = participants.split(",").map(name => name.trim());
-    }
-
-    const nameFilters = fullNames.map(fullName => {
-      const [firstName, ...lastNameParts] = fullName.trim().split(" ");
-      return { firstName, lastName: lastNameParts.join(" ") };
-    });
-
-    const matchedUsers = await User.find({ $or: nameFilters });
-
-    if (matchedUsers.length !== fullNames.length) {
-      return res.status(400).json({
-        success: false,
-        message: "One or more participants not found",
-      });
-    }
-
-    const participantIds = matchedUsers.map(user => user._id);
-
-    // Find presenter by name
-    const [presenterFirst, ...presenterLastParts] = presenter.trim().split(" ");
-    const presenterUser = await User.findOne({
-      firstName: presenterFirst,
-      lastName: presenterLastParts.join(" "),
-    });
-
+    // Validate presenter ID
+    const presenterUser = await User.findById(presenter);
     if (!presenterUser) {
       return res.status(400).json({
         success: false,
@@ -73,11 +42,30 @@ const createToolboxTalk = async (req, res) => {
       });
     }
 
+    // Validate participant IDs
+    let participantIds = [];
+
+    if (Array.isArray(participants)) {
+      participantIds = participants;
+    } else if (typeof participants === "string") {
+      participantIds = participants.split(",").map(id => id.trim());
+    }
+
+    const matchedUsers = await User.find({ _id: { $in: participantIds } });
+
+    if (matchedUsers.length !== participantIds.length) {
+      return res.status(400).json({
+        success: false,
+        message: "One or more participant IDs are invalid",
+      });
+    }
+
+    // Save Toolbox Talk
     const talk = new ToolboxTalk({
       title,
       date,
       time,
-      presenter: presenterUser._id,
+      presenter,
       participants: participantIds,
       description,
       status,
@@ -100,16 +88,19 @@ const createToolboxTalk = async (req, res) => {
   }
 };
 
-
 const getAllToolboxTalks = async (req, res) => {
   try {
     const talks = await ToolboxTalk.find()
-      .populate("participants", "firstName lastName")
-      .populate("presenter", "firstName lastName");
+      .populate("participants", "_id firstName lastName")
+      .populate("presenter", "_id firstName lastName");
 
     res.status(200).json({ success: true, data: talks });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Failed to fetch Toolbox Talks", error: error.message });
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch Toolbox Talks",
+      error: error.message,
+    });
   }
 };
 
@@ -140,7 +131,7 @@ const updateToolboxTalk = async (req, res) => {
 
     let imageUrl = "";
 
-    // Cloudinary image upload
+    // Handle Cloudinary image upload
     if (req.files && req.files.image) {
       const imageFile = req.files.image;
       const uploadResult = await cloudinary.uploader.upload(imageFile.tempFilePath, {
@@ -153,47 +144,41 @@ const updateToolboxTalk = async (req, res) => {
       }
     }
 
-    // Parse participants (supports JSON array OR comma-separated string)
-    let fullNames = [];
+    // Validate presenter
+    const presenterUser = await User.findById(presenter);
+    if (!presenterUser) {
+      return res.status(400).json({
+        success: false,
+        message: "Presenter not found",
+      });
+    }
+
+    // Handle participant IDs (comma-separated string or array)
+    let participantIds = [];
 
     if (Array.isArray(participants)) {
-      fullNames = participants;
-    } else {
-      try {
-        fullNames = JSON.parse(participants);
-      } catch {
-        fullNames = participants.split(",").map(name => name.trim());
-      }
+      participantIds = participants;
+    } else if (typeof participants === "string") {
+      participantIds = participants.split(",").map(id => id.trim());
     }
 
-    // Create name filters for querying users
-    const nameFilters = fullNames.map(fullName => {
-      const [firstName, ...lastNameParts] = fullName.trim().split(" ");
-      return { firstName, lastName: lastNameParts.join(" ") };
-    });
+    const matchedUsers = await User.find({ _id: { $in: participantIds } });
 
-    const matchedUsers = await User.find({ $or: nameFilters });
-    const participantIds = matchedUsers.map(user => user._id);
-
-    // Find presenter by full name
-    const [presenterFirst, ...presenterLastParts] = presenter.trim().split(" ");
-    const presenterUser = await User.findOne({
-      firstName: presenterFirst,
-      lastName: presenterLastParts.join(" "),
-    });
-
-    if (!presenterUser) {
-      return res.status(400).json({ success: false, message: "Presenter not found" });
+    if (matchedUsers.length !== participantIds.length) {
+      return res.status(400).json({
+        success: false,
+        message: "One or more participant IDs are invalid",
+      });
     }
 
-    // Update ToolboxTalk
+    // Update Toolbox Talk
     const updatedTalk = await ToolboxTalk.findByIdAndUpdate(
       req.params.id,
       {
         title,
         date,
         time,
-        presenter: presenterUser._id,
+        presenter,
         participants: participantIds,
         description,
         status,
@@ -203,12 +188,15 @@ const updateToolboxTalk = async (req, res) => {
     );
 
     if (!updatedTalk) {
-      return res.status(404).json({ success: false, message: "Toolbox Talk not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Toolbox Talk not found",
+      });
     }
 
     res.status(200).json({
       success: true,
-      message: "Updated successfully",
+      message: "Toolbox Talk updated successfully",
       data: updatedTalk,
     });
   } catch (error) {

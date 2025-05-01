@@ -1,6 +1,7 @@
 const mongoose =require("mongoose")
-const Project = require("../Model/projectsModel"); 
-const Swms=require("../Model/SwmsModel")
+// const Project = require("../Model/projectsModel"); 
+// const User = require("../Model/userModel");
+// const Swms=require("../Model/SwmsModel")
 
 const CalendarSchema = new mongoose.Schema({
     taskTitle: { 
@@ -12,13 +13,9 @@ const CalendarSchema = new mongoose.Schema({
       required: true,
     },
     project: {
-      type: mongoose.Schema.Types.ObjectId, // ObjectId for project
-      ref: 'Projects',
+      type: mongoose.Schema.Types.ObjectId, // Store ObjectId for project
+      ref: 'Projects', // Referencing the Projects collection
       required: true,
-      validate: {
-        validator: (v) => mongoose.Types.ObjectId.isValid(v), // Validate the ObjectId format
-        message: 'Invalid Project ID',
-      },
     },
     taskType: {
       type: String,
@@ -32,24 +29,20 @@ const CalendarSchema = new mongoose.Schema({
       type: Date,
       required: true,
     },
-    assignTeamMembers: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      required: true,
-    },
-    image: [],
-    reminders:[
-        {
-            email:{
-                type: String,
-                required: true,
-            },
-            PushNotification:{
-                type: String,
-                required: true,
-            }
-        }
+    assignTeamMembers: [
+      {
+        type: mongoose.Schema.Types.ObjectId, // Reference to the User model
+        ref: 'User', // Referencing the User model
+        required: true,
+      },
     ],
+    image: [],
+    reminders:
+        {
+          type: String
+        
+    },
+    
     color:{
         type: String,
         required: true,

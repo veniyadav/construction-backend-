@@ -1,5 +1,5 @@
 const express=require('express');
-const { createChat, getAllChats, searchChats, sendMessage, deleteChat  } = require('../Controller/chatController');
+const { createChat, getAllChats, searchChats, sendMessage, deleteChat, createGroupChat } = require('../Controller/chatController');
 
 const router = express.Router()
 
@@ -9,9 +9,11 @@ router.get('/',getAllChats)
 
 router.get('/:searchTerm',searchChats)
 
-router.patch('/',sendMessage)
+router.post('/sendMessage',sendMessage)
 
 router.delete('/:id',deleteChat)
+
+router.post('/',createGroupChat)
 
 
 module.exports = router 

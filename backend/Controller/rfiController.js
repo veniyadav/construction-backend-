@@ -35,7 +35,7 @@ cloudinary.config({
       }
   
       // Find the user by firstName
-      const user = await User.findOne({ firstName: assignee });
+      const user = await User.findOne({ _id: assignee });
   
       if (!user) {
         return res.status(400).json({
@@ -93,17 +93,16 @@ cloudinary.config({
   // };
 
 
-
   const getAllRFIs = async (req, res) => {
     try {
       const rfiList = await RFI.find()
         .limit(15)
         .sort({ createdAt: -1 }) // latest first
-        .populate("assignee", "firstName"); // ✅ This adds the full name
+        .populate("assignee", "_id"); // ✅ This adds the full name
   
       const formattedRFIList = rfiList.map(rfi => ({
         ...rfi._doc,
-        assignee: rfi.assignee ? `${rfi.assignee.firstName}` : "Unassigned",
+        assignee: rfi.assignee ? `${rfi.assignee._id}` : "Unassigned",
       }));
   
       res.status(200).json({
@@ -123,7 +122,7 @@ cloudinary.config({
 
   const getRFIById = async (req, res) => {
     try {
-      const rfi = await RFI.findById(req.params.id);
+      const rfi = await RFI.findById(req.params.id).populate('assignee', 'firstName');
   
       if (!rfi) {
         return res.status(404).json({
@@ -144,7 +143,7 @@ cloudinary.config({
       });
     }
   };
-
+  
 
   const updateRFI = async (req, res) => {
     const { subject, priority, due_date, assignee, department, description, status } = req.body;
@@ -166,7 +165,7 @@ cloudinary.config({
       }
   
       // Find assignee user by firstName
-      const user = await User.findOne({ firstName: assignee });
+      const user = await User.findOne({ _id: assignee });
   
       if (!user) {
         return res.status(400).json({
@@ -218,8 +217,6 @@ cloudinary.config({
   };
 
   
-  
-
 
   const deleteRFI = async (req, res) => {
     try {

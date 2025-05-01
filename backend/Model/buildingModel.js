@@ -10,11 +10,11 @@ const buildingSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  CategoryId: { // Category Reference
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'BuildingCategory',
-    required: true  // Set to false if you want to make this optional
-  }
+  // CategoryId: { // Category Reference
+  //   type: mongoose.Schema.Types.ObjectId,
+  //   ref: 'BuildingCategory',
+  //   required: true  // Set to false if you want to make this optional
+  // }
 }, {
   timestamps: true
 });

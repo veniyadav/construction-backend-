@@ -102,6 +102,7 @@ const getReportsAnalytics = async (req, res) => {
     const totalTasks = tasks.length;
     return totalTasks === 0 ? 0 : (completedTasks / totalTasks) * 100;
   };
+  
 
 
 module.exports = { getReportsAnalytics };
