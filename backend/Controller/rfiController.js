@@ -13,7 +13,6 @@ cloudinary.config({
 
 
 
-
   // CREATE RFI
   const createRFI = async (req, res) => {
     const { subject, priority, due_date, assignee, department, description, status } = req.body;

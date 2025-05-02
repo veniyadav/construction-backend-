@@ -11,11 +11,13 @@ const safetyEquipmentAssignmentSchema = new mongoose.Schema({
     required: true
   },
   assignedBy: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
     required: true
   },
   assignedTo: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
     required: true
   },
   submissionDeadline: {
