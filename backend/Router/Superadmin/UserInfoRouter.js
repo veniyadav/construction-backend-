@@ -7,6 +7,7 @@ const router = express.Router()
 router.post('/',createSuperadmin)
 
 router.get('/',AllSuperadmin)
+router.get('/:id',SingleSuperadmin)
 
 router.delete('/:id',deleteSuperadmin)
 
