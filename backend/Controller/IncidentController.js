@@ -74,6 +74,7 @@ cloudinary.config({
     }
   };
 
+
   const getAllIncidents = async (req, res) => {
     try {
       const incidents = await Incident.find().sort({ dateTime: -1 });  // Sort by date (newest first)
@@ -91,7 +92,6 @@ cloudinary.config({
     }
   };
    
-
 
   const getIncidentById = async (req, res) => {
     const { id } = req.params;  // Get the incident ID from the URL
@@ -119,7 +119,6 @@ cloudinary.config({
       });
     }
   };
-
 
 
   const updateIncident = async (req, res) => {
@@ -181,7 +180,6 @@ cloudinary.config({
   };
 
 
-
   const deleteIncident = async (req, res) => {
     const { id } = req.params;
   
@@ -213,19 +211,8 @@ cloudinary.config({
       });
     }
   };
-  
-
-
- 
-
-
-
-  
-  
-  
-  
-  
-  
+    
+    
 
 
 

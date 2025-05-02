@@ -52,5 +52,5 @@ const getLastThreeData = async (req, res) => {
 
 
 
-  module.exports = {getLastThreeData};
+module.exports = {getLastThreeData};
   

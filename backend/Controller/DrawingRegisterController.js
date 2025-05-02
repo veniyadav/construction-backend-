@@ -18,8 +18,9 @@ const DrawingRegisterCreate = asyncHandler(async (req, res) => {
     documentTitle,
     documentType,
     folder,
-    assignedTo, 
+    assignedTo, // This should be a user ObjectId
     comments,
+    status
   } = req.body;
 
   try {
@@ -56,8 +57,9 @@ const DrawingRegisterCreate = asyncHandler(async (req, res) => {
       documentTitle,
       documentType,
       folder,
-      assignedTo,  
+      assignedTo,  // Ensure assignedTo is a valid ObjectId
       comments,
+      status,
       image: imageUrls,
     });
 
@@ -77,10 +79,6 @@ const DrawingRegisterCreate = asyncHandler(async (req, res) => {
     });
   }
 });
-
-
-
-
   
     
     //GET SINGLE AllProjects
@@ -104,9 +102,7 @@ const DrawingRegisterCreate = asyncHandler(async (req, res) => {
       }
     });
     
-    
-      
-    
+     
     
         //GET SINGLE DeleteProjects
     //METHOD:DELETE
@@ -131,6 +127,7 @@ const DrawingRegisterCreate = asyncHandler(async (req, res) => {
           'folder',
           'assignedTo',
           'comments',
+          'status'
         ];
     
         const updateData = {};

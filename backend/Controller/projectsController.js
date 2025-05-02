@@ -53,6 +53,8 @@ const Allprojects = async (req, res) => {
   }
 };
 
+
+
     //GET SINGLE DeleteProjects
     //METHOD:DELETE
 const deleteprojects = async (req, res) => {
@@ -149,6 +151,7 @@ const projectsSingle = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
 
 // METHOD: GET
 // ROUTE: /api/projects/by-user/:id

@@ -71,7 +71,6 @@
 // });
 
 
-
 const express = require('express');
 const http = require('http'); // 🛜 HTTP server banana zaruri hai socket.io ke liye
 const { Server } = require('socket.io');
@@ -103,6 +102,9 @@ DBconnect();
 
 // ✅ Safe temp dir path for file uploads
 const tempDir = path.join(__dirname, 'tmp');
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+
 
 // ✅ Middlewares
 app.use(cors({

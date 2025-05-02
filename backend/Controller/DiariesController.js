@@ -25,7 +25,6 @@ const DiariesCreate=asyncHandler(async(req, res) => {
   })
 
   
-
   
   //GET SINGLE AllProjects
   //METHOD:GET
@@ -38,8 +37,7 @@ const DiariesCreate=asyncHandler(async(req, res) => {
       res.json(AllDiaries)
     }
     
-  
-  
+    
       //GET SINGLE DeleteProjects
   //METHOD:DELETE
   const deleteDiaries = async (req, res) => {
