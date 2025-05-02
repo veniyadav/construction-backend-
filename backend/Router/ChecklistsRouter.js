@@ -11,7 +11,7 @@ router.get('/:id',SingleChecklists)
 
 router.delete('/:id',deleteChecklists)
 
-router.put('/:id',UpdateChecklists)
+router.patch('/:id',UpdateChecklists)
 
 
 module.exports = router;
