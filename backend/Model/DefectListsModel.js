@@ -7,7 +7,8 @@ const DefectSchema = new mongoose.Schema({
         required:true,
     },
     project:{
-        type:String,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Projects",
         required:true,
     },
     location:{
@@ -15,12 +16,15 @@ const DefectSchema = new mongoose.Schema({
         required:true,
     },
     category:{
-        type:String,
-        required:true,
+
+       type: mongoose.Schema.Types.ObjectId,
+       ref: "Category", // Replace with your actual category model name
+       required: true,
     },
     assigned:{
-        type:String,
-        required:true,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
     },
     priority:{
         type:String,
@@ -38,7 +42,8 @@ const DefectSchema = new mongoose.Schema({
         type:Date,
         required:true,
     },
-    image: [String],
+    image: [],
+
     comments:{
         type:String,
         required:true,
