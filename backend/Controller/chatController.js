@@ -209,7 +209,10 @@ const searchChats = async (req, res) => {
 //   }
 // });
 
+// <<<<<<< HEAD
+// =======
 
+// >>>>>>> 79808baa02111460ccbfcef4bfc607569a17439f
 const sendMessage = asyncHandler(async (req, res) => {
   const { senderId, receiverId, message } = req.body;
 

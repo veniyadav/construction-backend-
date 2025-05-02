@@ -79,9 +79,23 @@ routerapi.use('/api/taskmanagement', require('./Router/TasksManagementRouter'));
 routerapi.use('/api/drawings', require('./Router/DrawingRegisterRouter'));
 
 routerapi.use('/api/complete', require('./Router/completeRouter'));
-
 routerapi.use('/api/dashboard', require('./Router/dashboardRouter'));
 
+// <<<<<<< HEAD
+// // // Superadmin 
+// UserInfo
+routerapi.use('/api/userInfo', require('./Router/Superadmin/UserInfoRouter'));
+// PlanPackage
+routerapi.use("/api/planPackage",require("./Router/Superadmin/PlanPackageRouter"))
+// PlanRequest
+routerapi.use("/api/planRequest",require("./Router/Superadmin/PlanRequestRouter"))
+// superadmin dashboard
 routerapi.use('/api/superadmindashboard', require('./Router/superadminDashboardRouter'));
 
 module.exports = routerapi
+
+// =======
+routerapi.use('/api/superadmindashboard', require('./Router/superadminDashboardRouter'));
+
+module.exports = routerapi
+// >>>>>>> 79808baa02111460ccbfcef4bfc607569a17439f

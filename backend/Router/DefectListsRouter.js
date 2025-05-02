@@ -13,3 +13,4 @@ router.delete('/:id',deleteDefect)
 
 router.patch('/:id',UpdateDefect)
 module.exports = router;
+module.exports = router;

@@ -229,10 +229,4 @@ const deleteToolboxTalk = async (req, res) => {
 
 
 
-
-
-
-
-
-
   module.exports = { createToolboxTalk, getAllToolboxTalks, getToolboxTalkById, updateToolboxTalk, deleteToolboxTalk };

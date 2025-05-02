@@ -45,7 +45,7 @@ cloudinary.config({
         console.log('No image file uploaded.');
       }
   
-      // Create the new announcement with user IDs in the `individuals` and `groups` arrays
+      // Create the new announcement with user IDs in the individuals and groups arrays
       const newAnnouncement = new Announcement({
         title,
         startDate,
@@ -60,14 +60,14 @@ cloudinary.config({
       // Save the announcement to the database
       const savedAnnouncement = await newAnnouncement.save();
   
-      // Populate the `individuals` array with user details (firstName and lastName)
+      // Populate the individuals array with user details (firstName and lastName)
       await savedAnnouncement.populate({
         path: 'individuals',
         model: 'User', // Assuming you have a User model
         select: 'firstName lastName', // Populate firstName and lastName fields
       });
   
-      // Populate the `groups` array with user details (firstName and lastName)
+      // Populate the groups array with user details (firstName and lastName)
       await savedAnnouncement.populate({
         path: 'groups',
         model: 'User', // Assuming you have a User model
@@ -78,7 +78,7 @@ cloudinary.config({
       const transformedAnnouncement = {
         ...savedAnnouncement.toObject(),
         individuals: savedAnnouncement.individuals.map(user => `${user.firstName} ${user.lastName}`),  // Combine first and last names
-        groups: savedAnnouncement.groups.map(user => `${user.firstName} ${user.lastName}`),  // Combine first and last names
+        groups: savedAnnouncement.groups.map(user =>` ${user.firstName} ${user.lastName}`),  // Combine first and last names
       };
   
       // Respond with a success message and the saved announcement with names
@@ -202,14 +202,14 @@ cloudinary.config({
         });
       }
   
-      // Populate the `individuals` array with user details (firstName and lastName)
+      // Populate the individuals array with user details (firstName and lastName)
       await updatedAnnouncement.populate({
         path: 'individuals',
         model: 'User', // Assuming you have a User model
         select: 'firstName lastName', // Populate firstName and lastName fields
       });
   
-      // Populate the `groups` array with user details (firstName and lastName)
+      // Populate the groups array with user details (firstName and lastName)
       await updatedAnnouncement.populate({
         path: 'groups',
         model: 'User', // Assuming you have a User model
@@ -220,7 +220,7 @@ cloudinary.config({
       const transformedAnnouncement = {
         ...updatedAnnouncement.toObject(),
         individuals: updatedAnnouncement.individuals.map(user => `${user.firstName} ${user.lastName}`),  // Combine first and last names
-        groups: updatedAnnouncement.groups.map(user => `${user.firstName} ${user.lastName}`),  // Combine first and last names
+        groups: updatedAnnouncement.groups.map(user =>`${user.firstName} ${user.lastName}`),  // Combine first and last names
       };
   
       res.status(200).json({
@@ -272,6 +272,4 @@ cloudinary.config({
 module.exports = {createAnnouncement, getAllAnnouncements, getAnnouncementById, updateAnnouncement, deleteAnnouncement};
 
 
-
-
-
+// ye h announcementcontroller h

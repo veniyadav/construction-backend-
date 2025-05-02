@@ -71,7 +71,7 @@ cloudinary.config({
 //     if (!user) {
 //       return res.status(400).json({
 //         success: false,
-//         message: `User not found: ${member.firstName} ${member.lastName}`,
+//         message: User not found: ${member.firstName} ${member.lastName},
 //       });
 //     }
 //     resolvedTeam.push(user._id);
@@ -191,7 +191,7 @@ const CalendarCreate = asyncHandler(async (req, res) => {
     if (!user) {
       return res.status(400).json({
         success: false,
-        message: `User not found with ID: ${userId}`,
+        message: User `not found with ID: ${userId}`,
       });
     }
     resolvedTeam.push(user._id);
@@ -384,7 +384,7 @@ const AllCalendar = async (req, res) => {
         if (!user) {
           return res.status(400).json({
             success: false,
-            message: `User not found with ID: ${userId}`,
+            message: User `not found with ID: ${userId}`,
           });
         }
         resolvedTeam.push(user._id);

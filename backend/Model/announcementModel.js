@@ -29,7 +29,7 @@ const announcementSchema = new mongoose.Schema({
     required: true,
     default: [],
   }],
-  // `individuals` also refers to `User` model (User ObjectId)
+  // individuals also refers to User model (User ObjectId)
   individuals: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User', // Reference to User model
@@ -41,4 +41,4 @@ const announcementSchema = new mongoose.Schema({
 
 const Announcement = mongoose.model('Announcement', announcementSchema);
 
-module.exports = Announcement;
+module.exports = Announcement; 
