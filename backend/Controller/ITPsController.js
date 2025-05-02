@@ -1,5 +1,6 @@
 const asyncHandler = require('express-async-handler');
 const ITPs = require('../Model/ITPsModel');
+const User = require('../Model/ITPsModel');
 
 
 const Induction = require("../Model/InductionModel");
@@ -12,99 +13,132 @@ cloudinary.config({
 });
 
 const ITPcCreate = asyncHandler(async (req, res) => {
-    let {
+  const {
+    projectName,
+    InspectionType,
+    Inspector,
+    Date,
+    additionalNotes,
+    activity,
+    criteria,
+    status
+  } = req.body;
+
+  let InspectionItems = [];
+
+  try {
+    if (req.body.InspectionItems) {
+      if (typeof req.body.InspectionItems === "string") {
+        InspectionItems = JSON.parse(req.body.InspectionItems);
+      } else {
+        InspectionItems = req.body.InspectionItems;
+      }
+
+      if (!Array.isArray(InspectionItems)) {
+        throw new Error("InspectionItems must be an array");
+      }
+    }
+  } catch (err) {
+    console.error("Failed to parse InspectionItems:", err.message);
+    return res.status(400).json({
+      success: false,
+      message: "Invalid format for InspectionItems (must be a JSON array)",
+    });
+  }
+
+  let imageUrls = [];
+
+  try {
+    if (req.files && req.files.image) {
+      const files = Array.isArray(req.files.image)
+        ? req.files.image
+        : [req.files.image];
+
+      for (const file of files) {
+        const uploadResult = await cloudinary.uploader.upload(file.tempFilePath, {
+          folder: "itp_uploads",
+          resource_type: "image",
+        });
+
+        if (uploadResult.secure_url) {
+          imageUrls.push(uploadResult.secure_url);
+        }
+      }
+    }
+
+    const newITP = new ITPs({
       projectName,
       InspectionType,
       Inspector,
       Date,
+      InspectionItems,
       additionalNotes,
       activity,
       criteria,
-      status
-    } = req.body;
-  
-    let InspectionItems = [];
-  
-    // Parse InspectionItems if it comes as a JSON string
-    try {
-      if (req.body.InspectionItems) {
-        if (typeof req.body.InspectionItems === "string") {
-          InspectionItems = JSON.parse(req.body.InspectionItems);
-        } else {
-          InspectionItems = req.body.InspectionItems;
-        }
-      }
-    } catch (err) {
-      console.error("Failed to parse InspectionItems:", err);
-      return res.status(400).json({
-        success: false,
-        message: "Invalid format for InspectionItems",
-      });
-    }
-  
-    try {
-      let imageUrls = [];
-  
-      // Handle image uploads
-      if (req.files && req.files.image) {
-        const files = Array.isArray(req.files.image)
-          ? req.files.image
-          : [req.files.image];
-  
-        for (const file of files) {
-          const uploadResult = await cloudinary.uploader.upload(file.tempFilePath, {
-            folder: "itp_uploads",
-            resource_type: "image",
-          });
-  
-          if (uploadResult.secure_url) {
-            imageUrls.push(uploadResult.secure_url);
-          }
-        }
-      }
-  
-      // Create and save ITP record
-      const newITP = new ITPs({
-        projectName,
-        InspectionType,
-        Inspector,
-        Date,
-        InspectionItems,
-        additionalNotes,
-        activity,
-        criteria,
-        status,
-        image: imageUrls,
-      });
-  
-      await newITP.save();
-  
-      res.status(201).json({
-        success: true,
-        message: "ITP created successfully",
-        itp: newITP,
-      });
-    } catch (error) {
-      console.error("Error creating ITP:", error);
-      res.status(500).json({
-        success: false,
-        message: "An error occurred while creating the ITP",
-        error: error.message,
-      });
-    }
-  });
-   
+      status,
+      image: imageUrls,
+    });
+
+    await newITP.save();
+
+    res.status(201).json({
+      success: true,
+      message: "ITP created successfully",
+      itp: newITP,
+    });
+  } catch (error) {
+    console.error("Error creating ITP:", error.message);
+    res.status(500).json({
+      success: false,
+      message: "Server error while creating ITP",
+      error: error.message,
+    });
+  }
+});
+
 
 //GET SINGLE AllITPs
 //METHOD:GET
 const AllITPc = async (req, res) => {
+  try {
+    // Fetch ITPs and populate the Inspector field with 'firstName' and 'lastName'
     const AllITPc = await ITPs.find()
-    if (AllITPc === null) {
-        res.status(404)
-        throw new Error("Categories Not Found")
+      .populate('Inspector', 'firstName lastName')  // Populate the Inspector field with firstName and lastName
+    
+    if (AllITPc.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "ITPs not found",
+      });
     }
-    res.json(AllITPc)
-}
+
+    // Format the response to include inspector info directly
+    const formattedITPs = AllITPc.map(itp => {
+      if (itp.Inspector) {
+        // Only create inspectorName if the Inspector field is populated
+        itp.inspectorName = `${itp.Inspector.firstName} ${itp.Inspector.lastName}`;
+      } else {
+        // Fallback if Inspector is undefined or null
+        itp.inspectorName = 'Unknown Inspector';
+      }
+      return itp.toObject();
+    });
+
+    res.status(200).json({
+      success: true,
+      data: formattedITPs,
+    });
+  } catch (error) {
+    console.error("Error fetching ITPs:", error);
+    res.status(500).json({
+      success: false,
+      message: "An error occurred while fetching ITPs",
+      error: error.message,
+    });
+  }
+};
+
+
 
 
 const getITPs = async (req, res) => {
@@ -152,92 +186,124 @@ const deleteITPc = async (req, res) => {
 //GET SINGLE ITPsUpdate
 //METHOD:PUT
 const UpdateITPc = asyncHandler(async (req, res) => {
-    try {
-      const allowedFields = [
-        'projectName',
-        'InspectionType',
-        'Inspector',
-        'Date',
-        'InspectionItems',
-        'additionalNotes',
-      ];
-  
-      const updateData = {}; 
-      allowedFields.forEach((field) => {
-        if (req.body[field] !== undefined) {
-          if (field === 'InspectionItems') {
-            try {
-              updateData[field] = typeof req.body[field] === 'string'
-                ? JSON.parse(req.body[field])
-                : req.body[field];
-            } catch (err) {
-              return res.status(400).json({
-                message: 'Invalid JSON format in InspectionItems',
-              });
-            }
-          } else {
-            updateData[field] = req.body[field];
-          }
-        }
-      });
-  
-      // Handle image update
-      let imageUrls = [];
-      if (req.files && req.files.image) {
-        const files = Array.isArray(req.files.image)
-          ? req.files.image
-          : [req.files.image];
-  
-        for (const file of files) {
-          const uploadResult = await cloudinary.uploader.upload(file.tempFilePath, {
-            folder: 'itp_uploads',
-            resource_type: 'image',
-          });
-  
-          if (uploadResult.secure_url) {
-            imageUrls.push(uploadResult.secure_url);
-          }
-        } 
-        updateData.image = imageUrls;
-      }
-  
-      // Require at least one field to update
-      if (Object.keys(updateData).length === 0) {
-        return res.status(400).json({
-          message: 'At least one field must be provided for update',
+  const { id } = req.params;
+  const {
+    projectName,
+    InspectionType,
+    Inspector,
+    Date,
+    additionalNotes,
+    activity,
+    criteria,
+    status,
+    InspectionItems,
+  } = req.body;
+
+  let imageUrls = [];
+
+  try {
+    // Handle image uploads, if any
+    if (req.files && req.files.image) {
+      const files = Array.isArray(req.files.image)
+        ? req.files.image
+        : [req.files.image];
+
+      for (const file of files) {
+        const uploadResult = await cloudinary.uploader.upload(file.tempFilePath, {
+          folder: "itp_uploads",
+          resource_type: "image",
         });
+
+        if (uploadResult.secure_url) {
+          imageUrls.push(uploadResult.secure_url);
+        }
       }
-  
-      // Find and update
-      const updatedITP = await ITPs.findByIdAndUpdate(req.params.id, updateData, {
-        new: true,
-      });
-      if (!updatedITP) {
-        return res.status(404).json({ message: 'ITP record not found' });
-      } 
-      res.status(200).json({
-        success: true,
-        message: 'ITP updated successfully',
-        itp: updatedITP,
-      });
-    } catch (error) {
-      console.error('Error updating ITP:', error);
-      res.status(500).json({ message: 'Server error', error: error.message });
     }
-  });
+
+    // Parse InspectionItems if it's a string
+    let parsedInspectionItems = [];
+    if (InspectionItems) {
+      if (typeof InspectionItems === "string") {
+        try {
+          parsedInspectionItems = JSON.parse(InspectionItems); // Parse if stringified
+        } catch (err) {
+          return res.status(400).json({
+            success: false,
+            message: "Invalid format for InspectionItems (must be a JSON array)",
+          });
+        }
+      } else if (Array.isArray(InspectionItems)) {
+        parsedInspectionItems = InspectionItems;
+      }
+    }
+
+    // Find the existing ITP by ID
+    const existingITP = await ITPs.findById(id);
+    if (!existingITP) {
+      return res.status(404).json({ success: false, message: "ITP not found" });
+    }
+
+    // Update fields of the existing ITP
+    existingITP.projectName = projectName || existingITP.projectName;
+    existingITP.InspectionType = InspectionType || existingITP.InspectionType;
+    existingITP.Inspector = Inspector || existingITP.Inspector;
+    existingITP.Date = Date || existingITP.Date;
+    existingITP.InspectionItems = parsedInspectionItems.length > 0 ? parsedInspectionItems : existingITP.InspectionItems;
+    existingITP.additionalNotes = additionalNotes || existingITP.additionalNotes;
+    existingITP.activity = activity || existingITP.activity;
+    existingITP.criteria = criteria || existingITP.criteria;
+    existingITP.status = status || existingITP.status;
+    existingITP.image = imageUrls.length > 0 ? imageUrls : existingITP.image;
+
+    // Save the updated ITP
+    await existingITP.save();
+
+    res.status(200).json({
+      success: true,
+      message: "ITP updated successfully",
+      itp: existingITP,
+    });
+  } catch (error) {
+    console.error("Error updating ITP:", error.message);
+    res.status(500).json({
+      success: false,
+      message: "Server error while updating ITP",
+      error: error.message,
+    });
+  }
+});
   
 
 
 //METHOD:Single
 //TYPE:PUBLIC
+
 const SingleITPc = async (req, res) => {
-    try {
-        const SingleITPc = await ITPs.findById(req.params.id);
-        res.status(200).json(SingleITPc)
-    } catch (error) {
-        res.status(404).json({ msg: "Can t Find Projects" })
-    }
-}
+  try {
+      // Fetch the single ITP and populate the Inspector field with firstName and lastName
+      const SingleITPc = await ITPs.findById(req.params.id)
+          .populate('Inspector', 'firstName lastName');  // Populate the Inspector with firstName and lastName
+
+      // If no ITP is found, return a 404 error
+      if (!SingleITPc) {
+          return res.status(404).json({ msg: "ITP not found" });
+      }
+
+      // Add the inspector's name directly in the response (optional)
+      SingleITPc.inspectorName = `${SingleITPc.Inspector.firstName} ${SingleITPc.Inspector.lastName}`;
+
+      res.status(200).json(SingleITPc);
+  } catch (error) {
+      // Handle any errors that occur during the process
+      console.error("Error fetching ITP:", error);
+      res.status(500).json({
+          success: false,
+          message: "An error occurred while fetching the ITP",
+          error: error.message,
+      });
+  }
+};
+
 
 
 
