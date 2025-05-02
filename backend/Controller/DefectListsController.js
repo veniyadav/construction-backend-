@@ -1,8 +1,8 @@
 const asyncHandler = require('express-async-handler');
 const Defect = require('../Model/DefectListsModel');
-
-
-const Induction = require("../Model/InductionModel");
+const Projects = require("../Model/projectsModel");
+const User = require("../Model/userModel");
+const Category = require("../Model/categoryModel");
 const cloudinary = require('../Config/cloudinary');
 
 cloudinary.config({
@@ -11,106 +11,142 @@ cloudinary.config({
     api_secret: 'p12EKWICdyHWx8LcihuWYqIruWQ'
 });
 
+
 const DefectCreate = asyncHandler(async (req, res) => {
-    let {
-        title,
-        project,
-        location,
-        category,
-        assigned,
-        priority,
-        description,
-        status,
-        comments,
-        date,
-    } = req.body;
-    
-  
-    let InspectionItems = [];
-  
-    // Parse InspectionItems if it comes as a JSON string
-    try {
-      if (req.body.InspectionItems) {
-        if (typeof req.body.InspectionItems === "string") {
-          InspectionItems = JSON.parse(req.body.InspectionItems);
-        } else {
-          InspectionItems = req.body.InspectionItems;
-        }
-      }
-    } catch (err) {
-      console.error("Failed to parse InspectionItems:", err);
+  const {
+    title,
+    project,     // Project ID
+    location,
+    category,    // Category ID
+    assigned,    // User ID
+    priority,
+    description,
+    status,
+    comments,
+    date,
+  } = req.body;
+
+  try {
+    // Validate assigned user
+    const user = await User.findById(assigned);
+    if (!user) {
       return res.status(400).json({
         success: false,
-        message: "Invalid format for InspectionItems",
+        message: "Assigned user not found",
       });
     }
-  
-    try {
-      let imageUrls = [];
-  
-      // Handle image uploads
-      if (req.files && req.files.image) {
-        const files = Array.isArray(req.files.image)
-          ? req.files.image
-          : [req.files.image];
-  
-        for (const file of files) {
-          const uploadResult = await cloudinary.uploader.upload(file.tempFilePath, {
-            folder: "Defect_uploads",
-            resource_type: "image",
-          });
-  
-          if (uploadResult.secure_url) {
-            imageUrls.push(uploadResult.secure_url);
-          }
+
+    // Validate category
+    const cat = await Category.findById(category);
+    if (!cat) {
+      return res.status(400).json({
+        success: false,
+        message: "Category not found",
+      });
+    }
+
+    // Validate project
+    const proj = await Projects.findById(project);
+    if (!proj) {
+      return res.status(400).json({
+        success: false,
+        message: "Project not found",
+      });
+    }
+
+    let imageUrls = [];
+
+    // Upload images to Cloudinary
+    if (req.files && req.files.image) {
+      const files = Array.isArray(req.files.image)
+        ? req.files.image
+        : [req.files.image];
+
+      for (const file of files) {
+        const uploadResult = await cloudinary.uploader.upload(file.tempFilePath, {
+          folder: "Defect_uploads",
+          resource_type: "image",
+        });
+
+        if (uploadResult.secure_url) {
+          imageUrls.push(uploadResult.secure_url);
         }
       }
-  
-      // Create and save Defect record
-      const newDefect = new Defect({
-        title,
-        project,
-        location,
-        category,
-        assigned,
-        priority,
-        description,
-        status,
-        comments,
-        date,
-        image: imageUrls,
-    });
-    
-      await newDefect.save();
-      res.status(201).json({
-        success: true,
-        message: "Defect created successfully",
-        Defect: newDefect,
-      });
-    } catch (error) {
-      console.error("Error creating Defect:", error);
-      res.status(500).json({
-        success: false,
-        message: "An error occurred while creating the Defect",
-        error: error.message,
-      });
     }
-  });
 
+    const newDefect = new Defect({
+      title,
+      project,
+      location,
+      category,
+      assigned,
+      priority,
+      description,
+      status,
+      comments,
+      date,
+      image: imageUrls,
+    });
 
+    await newDefect.save();
+
+    res.status(201).json({
+      success: true,
+      message: "Defect created successfully",
+      defect: newDefect,
+    });
+  } catch (error) {
+    console.error("Error creating Defect:", error);
+    res.status(500).json({
+      success: false,
+      message: "An error occurred while creating the Defect",
+      error: error.message,
+    });
+  }
+});
 
 
   
   //GET SINGLE AllProjects
   //METHOD:GET
   const AllDefect = async (req, res) => {
-      const AllDefect = await Defect.find()
-      if (AllDefect === null) {
-        res.status(404)
-        throw new Error("Categories Not Found")
+    try {
+      const allDefects = await Defect.find()
+        .populate({
+          path: 'project',
+          select: 'name', // Assuming "title" is the name of the project
+          model: 'Projects'
+        })
+        .populate({
+          path: 'category',
+          select: 'category',
+          model: 'Category'
+        })
+        .populate({
+          path: 'assigned',
+          select: 'firstName lastName',
+          model: 'User'
+        });
+  
+      if (!allDefects || allDefects.length === 0) {
+        return res.status(404).json({ success: false, message: "No defects found" });
       }
-      res.json(AllDefect)
+  
+      res.status(200).json({
+        success: true,
+        defects: allDefects,
+      });
+  
+    } catch (error) {
+      console.error("Error fetching defects:", error);
+      res.status(500).json({
+        success: false,
+        message: "An error occurred while fetching defects",
+        error: error.message,
+      });
     }
+  };
+  
     
   
   
@@ -129,98 +165,164 @@ const DefectCreate = asyncHandler(async (req, res) => {
   
     //GET SINGLE ProjectsUpdate
   //METHOD:PUT
-const UpdateDefect = asyncHandler(async (req, res) => {
-    try {
-      const allowedFields = [
-        'title',
-        'project',
-        'location',
-        'category',
-        'assigned',
-        'priority',
-        'description',
-        'status',
-        'comments',
-      ];
+  const UpdateDefect = asyncHandler(async (req, res) => {
+    const {
+      title,
+      project,     // Project ID
+      location,
+      category,    // Category ID
+      assigned,    // User ID
+      priority,
+      description,
+      status,
+      comments,
+      date,
+    } = req.body;
   
-      const updateData = {}; 
-      allowedFields.forEach((field) => {
-        if (req.body[field] !== undefined) {
-          if (field === 'InspectionItems') {
-            try {
-              updateData[field] = typeof req.body[field] === 'string'
-                ? JSON.parse(req.body[field])
-                : req.body[field];
-            } catch (err) {
-              return res.status(400).json({
-                message: 'Invalid JSON format in InspectionItems',
-              });
-            }
-          } else {
-            updateData[field] = req.body[field];
-          }
+    try {
+      // Validate assigned user if provided
+      if (assigned) {
+        const user = await User.findById(assigned);
+        if (!user) {
+          return res.status(400).json({
+            success: false,
+            message: "Assigned user not found",
+          });
+        }
+      }
+  
+      // Validate category if provided
+      if (category) {
+        const cat = await Category.findById(category);
+        if (!cat) {
+          return res.status(400).json({
+            success: false,
+            message: "Category not found",
+          });
+        }
+      }
+  
+      // Validate project if provided
+      if (project) {
+        const proj = await Projects.findById(project);
+        if (!proj) {
+          return res.status(400).json({
+            success: false,
+            message: "Project not found",
+          });
+        }
+      }
+  
+      // Prepare update fields
+      const updateFields = {
+        title,
+        project,
+        location,
+        category,
+        assigned,
+        priority,
+        description,
+        status,
+        comments,
+        date,
+      };
+  
+      // Remove undefined fields
+      Object.keys(updateFields).forEach((key) => {
+        if (updateFields[key] === undefined) {
+          delete updateFields[key];
         }
       });
   
-      // Handle image update
-      let imageUrls = [];
+      // Handle image uploads if any
       if (req.files && req.files.image) {
+        const imageUrls = [];
         const files = Array.isArray(req.files.image)
           ? req.files.image
           : [req.files.image];
   
         for (const file of files) {
           const uploadResult = await cloudinary.uploader.upload(file.tempFilePath, {
-            folder: 'itp_uploads',
-            resource_type: 'image',
+            folder: "Defect_uploads",
+            resource_type: "image",
           });
   
           if (uploadResult.secure_url) {
             imageUrls.push(uploadResult.secure_url);
           }
-        } 
-        updateData.image = imageUrls;
+        }
+  
+        updateFields.image = imageUrls;
       }
   
-      // Require at least one field to update
-      if (Object.keys(updateData).length === 0) {
-        return res.status(400).json({
-          message: 'At least one field must be provided for update',
+      // Update defect record
+      const updatedDefect = await Defect.findByIdAndUpdate(
+        req.params.id,
+        { $set: updateFields },
+        { new: true }
+      );
+  
+      if (!updatedDefect) {
+        return res.status(404).json({
+          success: false,
+          message: "Defect not found",
         });
       }
   
-      // Find and update
-      const updatedITP = await Defect.findByIdAndUpdate(req.params.id, updateData, {
-        new: true,
-      });
-      if (!updatedITP) {
-        return res.status(404).json({ message: 'ITP record not found' });
-      } 
       res.status(200).json({
         success: true,
-        message: 'ITP updated successfully',
-        itp: updatedITP,
+        message: "Defect updated successfully",
+        defect: updatedDefect,
       });
     } catch (error) {
-      console.error('Error updating ITP:', error);
-      res.status(500).json({ message: 'Server error', error: error.message });
+      console.error("Error updating Defect:", error);
+      res.status(500).json({
+        success: false,
+        message: "An error occurred while updating the Defect",
+        error: error.message,
+      });
     }
   });
   
   
   //METHOD:Single
   //TYPE:PUBLIC
-  const SingleDefect=async(req,res)=>{
-      try {
-          const SingleDefect= await Defect.findById(req.params.id);
-          res.status(200).json(SingleDefect)
-      } catch (error) {
-          res.status(404).json({msg:"Can t Find Diaries"} )
+  const SingleDefect = async (req, res) => {
+    try {
+      const singleDefect = await Defect.findById(req.params.id)
+        .populate({
+          path: 'project',
+          select: 'title', // Replace with correct field name for project title
+          model: 'Projects'
+        })
+        .populate({
+          path: 'category',
+          select: 'category',
+          model: 'Category'
+        })
+        .populate({
+          path: 'assigned',
+          select: 'firstName lastName',
+          model: 'User'
+        });
+  
+      if (!singleDefect) {
+        return res.status(404).json({ success: false, message: "Defect not found" });
       }
-  }
-
-
-
+  
+      res.status(200).json({
+        success: true,
+        defect: singleDefect
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: "Server error while fetching defect",
+        error: error.message,
+      });
+    }
+  };
+  
 
 
 
