@@ -20,7 +20,6 @@ const DrawingRegisterCreate = asyncHandler(async (req, res) => {
     folder,
     assignedTo, 
     comments,
-    status
   } = req.body;
 
   try {
@@ -59,7 +58,6 @@ const DrawingRegisterCreate = asyncHandler(async (req, res) => {
       folder,
       assignedTo,  
       comments,
-      status,
       image: imageUrls,
     });
 
