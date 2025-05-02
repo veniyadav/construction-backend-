@@ -11,5 +11,5 @@ router.get('/:id',SingleDefect)
 
 router.delete('/:id',deleteDefect)
 
-router.put('/:id',UpdateDefect)
+router.patch('/:id',UpdateDefect)
 module.exports = router;
