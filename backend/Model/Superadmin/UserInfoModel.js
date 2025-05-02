@@ -19,13 +19,9 @@ const SuperadminSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['Superadmin'],
-    default: 'Superadmin'
+    default: 'superadmin'
   },
-  profileImage: {
-    type: String,
-    default: ''
-  },
+  image: [],
   isAdmin: {
     type: Boolean,
     default: true
