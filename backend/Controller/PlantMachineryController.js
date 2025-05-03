@@ -1,61 +1,86 @@
 const asyncHandler = require("express-async-handler");
 const PlantMachinery = require("../Model/PlantMachineryModel");
+const Category = require("../Model/categoryModel");
 
 
 const PlantMachineryCreate = asyncHandler(async (req, res) => {
-    let {
-        toolID,
-        name,
-        manufacturer,
-        category,
-        purchaseDate,
-        condition,
-        notes,
-        location
-    } = req.body;
+  const {
+      toolID,
+      name,
+      manufacturer,
+      category,
+      purchaseDate,
+      condition,
+      notes,
+      location
+  } = req.body;
 
-    try {
-        // Create and save PlantMachinery record
-        const newPlantMachinery = new PlantMachinery({
-            toolID,
-            name,
-            manufacturer,
-            category,
-            purchaseDate,
-            condition,
-            notes,
-            location,
-        });
+  // Validate required fields
+  if (
+      !toolID ||
+      !name ||
+      !manufacturer ||
+      !category ||
+      !purchaseDate ||
+      !condition ||
+      !notes ||
+      !location
+  ) {
+      return res.status(400).json({ message: "All fields are required" });
+  }
 
-        await newPlantMachinery.save();
+  // Validate category existence
+  const categoryExists = await Category.findById(category);
+  if (!categoryExists) {
+      return res.status(404).json({ message: "Category not found" });
+  }
 
-        res.status(201).json({
-            success: true,
-            message: "PlantMachinery created successfully",
-            PlantMachinery: newPlantMachinery,
-        });
-    } catch (error) {
-        console.error("Error creating PlantMachinery:", error);
-        res.status(500).json({
-            success: false,
-            message: "An error occurred while creating the PlantMachinery",
-            error: error.message,
-        });
-    }
+  try {
+      const newPlantMachinery = new PlantMachinery({
+          toolID,
+          name,
+          manufacturer,
+          category, // This is a valid category ID
+          purchaseDate,
+          condition,
+          notes,
+          location,
+      });
+
+      await newPlantMachinery.save();
+
+      res.status(201).json({
+          success: true,
+          message: "PlantMachinery created successfully",
+          plantMachinery: newPlantMachinery,
+      });
+  } catch (error) {
+      console.error("Error creating PlantMachinery:", error);
+      res.status(500).json({
+          success: false,
+          message: "An error occurred while creating the PlantMachinery",
+          error: error.message,
+      });
+  }
 });
-
 
   
   //GET SINGLE AllProjects
   //METHOD:GET
   const AllPlantMachinery = async (req, res) => {
-      const AllPlantMachinery = await PlantMachinery.find()
-      if (AllPlantMachinery === null) {
-        res.status(404)
-        throw new Error("Categories Not Found")
+    try {
+      const allPlantMachinery = await PlantMachinery.find().populate('category', 'category'); // only return category name
+  
+      if (!allPlantMachinery || allPlantMachinery.length === 0) {
+        return res.status(404).json({ message: "No Plant Machinery found" });
       }
-      res.json(AllPlantMachinery)
+  
+      res.json(allPlantMachinery);
+    } catch (error) {
+      res.status(500).json({ message: "Server error", error });
     }
+  };
+  
   
    //GET SINGLE DeleteProjects
     //METHOD:DELETE
@@ -72,57 +97,82 @@ const PlantMachineryCreate = asyncHandler(async (req, res) => {
   
     //GET SINGLE ProjectsUpdate
   //METHOD:PUT
+
   const UpdatePlantMachinery = async (req, res) => {
-    try {
-      const allowedFields = [
-        'toolID',
-        'name',
-        'manufacturer',
-        'category',
-        'purchaseDate',
-        'condition',
-        'notes',
-        'location'
-      ];
-  
-      const updateData = {};
-      allowedFields.forEach(field => {
-        if (req.body[field] !== undefined) {
-          updateData[field] = req.body[field];
-        }
-      });
-  
-      if (Object.keys(updateData).length === 0) {
-        return res.status(400).json({ message: 'At least one field must be provided for update' });
-      }
-  
-      const updatedMachinery = await PlantMachinery.findByIdAndUpdate(
-        req.params.id,
-        updateData,
-        { new: true }
-      );
-  
-      if (!updatedMachinery) {
-        return res.status(404).json({ message: 'PlantMachinery not found' });
-      }
-  
-      res.status(200).json(updatedMachinery);
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: 'Server error', error });
+  const {
+    toolID,
+    name,
+    manufacturer,
+    category,
+    purchaseDate,
+    condition,
+    notes,
+    location
+  } = req.body;
+
+  try {
+    // Build update object with allowed fields
+    const updateData = {};
+    if (toolID !== undefined) updateData.toolID = toolID;
+    if (name !== undefined) updateData.name = name;
+    if (manufacturer !== undefined) updateData.manufacturer = manufacturer;
+    if (category !== undefined) updateData.category = category;
+    if (purchaseDate !== undefined) updateData.purchaseDate = purchaseDate;
+    if (condition !== undefined) updateData.condition = condition;
+    if (notes !== undefined) updateData.notes = notes;
+    if (location !== undefined) updateData.location = location;
+
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({ message: 'At least one field must be provided for update' });
     }
-  };
-  
+
+    // Validate category if it's being updated
+    if (category) {
+      const categoryExists = await Category.findById(category);
+      if (!categoryExists) {
+        return res.status(404).json({ message: 'Category not found' });
+      }
+    }
+
+    const updatedMachinery = await PlantMachinery.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { new: true }
+    );
+
+    if (!updatedMachinery) {
+      return res.status(404).json({ message: 'PlantMachinery not found' });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "PlantMachinery updated successfully",
+      plantMachinery: updatedMachinery
+    });
+  } catch (error) {
+    console.error("Error updating PlantMachinery:", error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
   
   
   //METHOD:Single
   //TYPE:PUBLIC
-  const SinglePlantMachinery=async(req,res)=>{
-      try {
-          const SinglePlantMachinery= await PlantMachinery.findById(req.params.id);
-          res.status(200).json(SinglePlantMachinery)
-      } catch (error) {
-          res.status(404).json({msg:"Can t Find Diaries"} )
+  const SinglePlantMachinery = async (req, res) => {
+    try {
+      const singlePlantMachinery = await PlantMachinery.findById(req.params.id).populate('category', 'category');
+  
+      if (!singlePlantMachinery) {
+        return res.status(404).json({ message: "Plant Machinery not found" });
       }
-  }
+  
+      res.status(200).json(singlePlantMachinery);
+    } catch (error) {
+      res.status(500).json({ message: "Server error", error });
+    }
+  };
+  
+
+
 module.exports = {PlantMachineryCreate,AllPlantMachinery,deletePlantMachinery,UpdatePlantMachinery,SinglePlantMachinery};
