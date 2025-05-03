@@ -11,6 +11,6 @@ router.get('/:id',SinglePlantMachinery)
 
 router.delete('/:id',deletePlantMachinery)
 
-router.put('/:id',UpdatePlantMachinery)
+router.patch('/:id',UpdatePlantMachinery)
 
 module.exports = router;
