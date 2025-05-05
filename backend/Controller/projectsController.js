@@ -4,24 +4,31 @@ const asyncHandler = require("express-async-handler");
 
 const ProjectsCreate = asyncHandler(async (req, res) => {
 
-    const { name, assignedTo, startDate, endDate, status, priority,Progress, description } = req.body;
+  const { name, assignedTo, startDate, endDate, status, priority, Progress, description } = req.body;
 
-    if (!name || !assignedTo || !startDate || !endDate || !status || !priority || !Progress || !description) {
-        return res.status(400).json({ message: 'All fields are required' });
-    }
+  if (!name || !assignedTo || !startDate || !endDate || !status || !priority || !Progress || !description) {
+    return res.status(400).json({ message: 'All fields are required' });
+  }
 
-    const newProject = await Projects.create({
-        name,
-        assignedTo,
-        startDate,
-        endDate,
-        status,
-        priority,
-        Progress,
-        description
-    });
+  // ✅ Check if the assigned user exists
+  const user = await User.findById(assignedTo);
+  if (!user) {
+    return res.status(404).json({ message: 'Assigned user not found' });
+  }
 
-    res.status(201).json( newProject );
+
+  const newProject = await Projects.create({
+    name,
+    assignedTo,
+    startDate,
+    endDate,
+    status,
+    priority,
+    Progress,
+    description
+  });
+
+  res.status(201).json(newProject);
 });
 
 
@@ -53,58 +60,84 @@ const Allprojects = async (req, res) => {
   }
 };
 
-    //GET SINGLE DeleteProjects
-    //METHOD:DELETE
-const deleteprojects = async (req, res) => {
-    let deleteprojectsID = req.params.id
-    if (deleteprojects) {
-      const deleteprojects = await Projects.findByIdAndDelete(deleteprojectsID, req.body);
-      res.status(200).json("Delete Projects Successfully")
-    } else {
-      res.status(400).json({ message: "Not Delete project" })
-    }
-  }
-  
 
-  //GET SINGLE ProjectsUpdate
+
+//GET SINGLE DeleteProjects
+//METHOD:DELETE
+const deleteprojects = async (req, res) => {
+  let deleteprojectsID = req.params.id
+  if (deleteprojects) {
+    const deleteprojects = await Projects.findByIdAndDelete(deleteprojectsID, req.body);
+    res.status(200).json("Delete Projects Successfully")
+  } else {
+    res.status(400).json({ message: "Not Delete project" })
+  }
+}
+
+
+//GET SINGLE ProjectsUpdate
 //METHOD:PUT
-const projectsUpdate = async (req, res) => {
-    try {
-      const allowedFields = [
-        'name',
-        'assignedTo',
-        'startDate',
-        'endDate',
-        'status',
-        'priority',
-        'Progress',
-        'description'
-      ];
-      const updateData = {};
-      allowedFields.forEach(field => {
-        if (req.body[field] !== undefined) {
-          updateData[field] = req.body[field];
-        }
-      });
-  
-      if (Object.keys(updateData).length === 0) {
-        return res.status(400).json({ message: 'At least one field must be provided for update' });
-      }
-      const updatedProject = await Projects.findByIdAndUpdate(
-        req.params.id,
-        updateData,
-        { new: true }
-      );
-      if (!updatedProject) {
-        return res.status(404).json({ message: 'Project not found' });
-      }
-      res.status(200).json(updatedProject);
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: 'Server error', error });
-    }
+const projectsUpdate = asyncHandler(async (req, res) => {
+  const {
+    name,
+    assignedTo,
+    startDate,
+    endDate,
+    status,
+    priority,
+    Progress,
+    description
+  } = req.body;
+
+  // ✅ Validate required fields
+  if (
+    !name ||
+    !assignedTo ||
+    !startDate ||
+    !endDate ||
+    !status ||
+    !priority ||
+    !Progress ||
+    !description
+  ) {
+    return res.status(400).json({ message: 'All fields are required' });
+  }
+
+  // ✅ Check if the assigned user exists
+  const user = await User.findById(assignedTo);
+  if (!user) {
+    return res.status(404).json({ message: 'Assigned user not found' });
+  }
+
+  // ✅ Prepare update data
+  const updateData = {
+    name,
+    assignedTo,
+    startDate,
+    endDate,
+    status,
+    priority,
+    Progress,
+    description
   };
-  
+
+  // ✅ Update the project
+  const updatedProject = await Projects.findByIdAndUpdate(
+    req.params.id,
+    updateData,
+    { new: true }
+  );
+
+  if (!updatedProject) {
+    return res.status(404).json({ message: 'Project not found' });
+  }
+
+  res.status(200).json({
+    success: true,
+    message: 'Project updated successfully',
+    data: updatedProject
+  });
+});
 
 
 
@@ -123,6 +156,8 @@ const projectsUpdate = async (req, res) => {
 // METHOD: GET
 // ROUTE: /api/projects/assigned/:id
 // DESC: Get 10 projects assigned to a specific user
+
+
 const projectsSingle = async (req, res) => {
   try {
     const projectId = req.params.id;
@@ -150,6 +185,7 @@ const projectsSingle = async (req, res) => {
   }
 };
 
+
 // METHOD: GET
 // ROUTE: /api/projects/by-user/:id
 const getProjectsByUser = async (req, res) => {
@@ -171,4 +207,6 @@ const getProjectsByUser = async (req, res) => {
 };
 
 
-module.exports = { ProjectsCreate,Allprojects,deleteprojects,projectsUpdate,projectsSingle,getProjectsByUser };
+
+
+module.exports = { ProjectsCreate, Allprojects, deleteprojects, projectsUpdate, projectsSingle, getProjectsByUser };
