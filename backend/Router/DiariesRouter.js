@@ -11,6 +11,6 @@ router.get('/:id',SingleDiaries)
 
 router.delete('/:id',deleteDiaries)
 
-router.put('/:id',UpdateDiaries)
+router.patch('/:id',UpdateDiaries)
 
 module.exports = router;
