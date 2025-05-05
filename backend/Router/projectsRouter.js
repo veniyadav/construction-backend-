@@ -11,7 +11,7 @@ router.get('/:id',projectsSingle)
 
 router.delete('/:id',deleteprojects)
 
-router.put('/:id',projectsUpdate)
+router.patch('/:id',projectsUpdate)
 
 router.get("/by-user/:id", getProjectsByUser); 
 module.exports = router
