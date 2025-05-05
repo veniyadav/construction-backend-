@@ -11,6 +11,6 @@ router.get('/:id',SingleSwms)
 
 router.delete('/:id',deleteSwms)
 
-router.put('/:id',UpdateSwms)
+router.patch('/:id',UpdateSwms)
 
 module.exports = router;
