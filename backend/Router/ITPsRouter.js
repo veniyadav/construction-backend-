@@ -13,6 +13,7 @@ router.get('/:id',SingleITPc)
 
 router.delete('/:id',deleteITPc)
 
-router.put('/:id',UpdateITPc)
+router.patch
+  ('/:id',UpdateITPc)
 
 module.exports = router;
