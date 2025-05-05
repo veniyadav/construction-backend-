@@ -10,7 +10,7 @@ router.get('/',AllEquipment)
 
 router.get('/:id',SingleEquipment)
 
-router.put('/:id',UpdateEquipment)
+router.patch('/:id',UpdateEquipment)
 
 router.delete('/:id',deleteEquipment)
 
