@@ -465,7 +465,7 @@ const AllCalendar = async (req, res) => {
   
 
 
-  //METHOD:Single
+  //METHOD:SingleCalendar
   //TYPE:PUBLIC
   const SingleCalendar = async (req, res) => {
     try {
