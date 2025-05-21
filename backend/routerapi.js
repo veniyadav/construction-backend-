@@ -61,10 +61,11 @@ routerapi.use('/api/building', require('./Router/buildingRouter'));
 
 routerapi.use('/api/buildingCategory', require('./Router/buildingCategoryRouter'));
 
+
+
 // \
 routerapi.use('/api/equipment',require('./Router/PlantMachineryEquipmentRouter'))
-//plantmachinery
-routerapi.use('/api/plantmachinery', require('./Router/PlantMachineryRouter'));
+
 // Calendar
 routerapi.use('/api/calendar', require('./Router/CalendarRouter'));
 // defectlists
@@ -79,8 +80,21 @@ routerapi.use('/api/taskmanagement', require('./Router/TasksManagementRouter'));
 routerapi.use('/api/drawings', require('./Router/DrawingRegisterRouter'));
 
 routerapi.use('/api/complete', require('./Router/completeRouter'));
+
 routerapi.use('/api/dashboard', require('./Router/dashboardRouter'));
 
+routerapi.use('/api/hazard', require('./Router/HazardRouter'));
+
+routerapi.use('/api/question', require('./Router/questionRouter'));
+
+routerapi.use('/api/ppe', require('./Router/ppeRouter'));
+
+routerapi.use('/api/plantTool', require('./Router/plantToolRouter'));
+
+routerapi.use('/api/plantAuditReport', require('./Router/plantAuditReportRouter'));
+
+
+// <<<<<<< HEAD
 // // // Superadmin 
 // UserInfo
 routerapi.use('/api/userInfo', require('./Router/Superadmin/UserInfoRouter'));
@@ -91,5 +105,9 @@ routerapi.use("/api/planRequest",require("./Router/Superadmin/PlanRequestRouter"
 // superadmin dashboard
 routerapi.use('/api/superadmindashboard', require('./Router/superadminDashboardRouter'));
 
+
+
+
 module.exports = routerapi
+
 
