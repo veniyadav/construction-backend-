@@ -1,45 +1,40 @@
 const mongoose =require("mongoose")
-const Project = require("../Model/projectsModel"); 
+//const Project = require("../Model/projectsModel"); 
 
-const SwmsSchema = new mongoose.Schema({
-    title: { type: String, required: true },
-    project: { type: mongoose.Schema.Types.ObjectId, ref: 'Projects', required: true },
-    workArea: { type: String, required: true },
-    description: { type: String, required: true },
-  
-    hazardsandControls: [
-      {
-        hazardDescription: {
-          type: String,
-          required: true,
-        },
-        riskLevel: {
-          type: String,
-          required: true,
-        },
-        controlMeasures: {
-          type: String,
-          required: true,
-        },
+const SwmsSchema = new mongoose.Schema(
+  {
+    swmsName: { type: String, required: true },
+    siteAddress: { type: String, required: true },
+    companyName: { type: String, required: true },
+    responsiblePersonName: { type: String, required: true },
+    dateCreated: { type: Date, default: Date.now },
+
+    companyInformation: {
+      companyName: { type: String, required: true },
+      abn: { type: String },
+      address: { type: String, required: true },
+      contactNumber: { type: String, required: true },
+      principalContractor: {
+        name: { type: String, required: true },
+        contactPerson: { type: String },
+        contactNumber: { type: String },
       },
-    ],
-  
-    ppeRequirements: {
-      HardHat: { type: Boolean, required: true },
-      SafetyBoots: { type: Boolean, required: true },
-      HighVisVest: { type: Boolean, required: true },
-      SafetyGlasses: { type: Boolean, required: true },
     },
-  
-    requiredPermits: {
-      WorkingatHeights: { type: Boolean, required: true },
-      HotWork: { type: Boolean, required: true },
-      ConfinedSpace: { type: Boolean, required: true },
-      Excavation: { type: Boolean, required: true },
+     workActivities: {
+      type: [String], // Array of strings
+     
+      required: true, // Ensure that work activities must be selected
     },
-  }, {
+    hazardIdentification: {
+      type: [String], // Array of strings
+      
+      required: true, // Ensure hazard identification must be selected
+    },
+  },
+  {
     timestamps: true,
-  });
+  }
+);
   
 
 module.exports = mongoose.model('SWMS',SwmsSchema)
