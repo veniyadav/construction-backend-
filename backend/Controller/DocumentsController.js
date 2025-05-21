@@ -13,21 +13,15 @@ cloudinary.config({
 
 const DocumentsCreate = asyncHandler(async (req, res) => {
   const {
-    folder,
     documentName,
     documentType,
     assignTo,
     dueDate,
-    submissionDate,
     status,
     comments
   } = req.body;
 
-  // Validate required fields
-  if (!folder || !documentName || !documentType || !assignTo || !dueDate || !submissionDate || !status || !comments) {
-    return res.status(400).json({ message: 'All fields are required' });
-  }
-
+  
   // ✅ Check if assignTo user exists
   const user = await User.findById(assignTo);
   if (!user) {
@@ -53,12 +47,10 @@ const DocumentsCreate = asyncHandler(async (req, res) => {
 
   // Create new document in database
   const newDocument = await Documents.create({
-    folder,
     documentName,
     documentType,
     assignTo,
     dueDate,
-    submissionDate,
     status,
     comments,
     image: imageUrl,  // Store the image URL in the database
@@ -109,24 +101,20 @@ const deleteDocuments = async (req, res) => {
 //METHOD:PUT
 const UpdateDocuments = asyncHandler(async (req, res) => {
   const {
-    folder,
     documentName,
     documentType,
     assignTo,
     dueDate,
-    submissionDate,
     status,
     comments
   } = req.body;
 
   // Validate required fields
   if (
-    !folder ||
     !documentName ||
     !documentType ||
     !assignTo ||
     !dueDate ||
-    !submissionDate ||
     !status ||
     !comments
   ) {
@@ -157,12 +145,10 @@ const UpdateDocuments = asyncHandler(async (req, res) => {
 
   // Prepare update data
   const updateData = {
-    folder,
     documentName,
     documentType,
     assignTo,
     dueDate,
-    submissionDate,
     status,
     comments,
   };
