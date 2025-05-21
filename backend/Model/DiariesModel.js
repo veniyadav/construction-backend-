@@ -6,10 +6,11 @@ const DiariesSchema = new mongoose.Schema({
         type:Date,
         required:true,
     },
-    projectName:{
-        type:String,
-        required:true,
-    },
+    projectName: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Projects",
+        required: true
+      },
     supervisorName:{
         type:String,
         required:true,
