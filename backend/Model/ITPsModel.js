@@ -1,56 +1,54 @@
 const mongoose = require("mongoose");
 
 const ITPsSchema = new mongoose.Schema({
-  projectName: {
+  title: {
     type: String,
     required: true,
   },
-  InspectionType: {
+  category: { // ✅ Stores category ID
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Category',
+    required: true,
+  },
+  taskStage: { // ✅ Formerly Task Type or Stage
     type: String,
     required: true,
   },
-  Inspector: {
+  folderLocation: {
+    type: String,
+    required: true,
+  },
+  folder: {
+    folderName: {
+      type: String,
+      required: true,
+    },
+    description: {
+      type: String,
+      default: "",
+    }
+  },
+  stepDescription: {
+    type: String,
+    required: true,
+  },
+  qualityStatus: {
+    type: String,
+    required: true,
+  },
+
+  reviewerAssignment: { // ✅ Reviewer assignment (User ID)
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true,
   },
-  Date: {
-    type: Date,
-    required: true,
-  },
-  InspectionItems: [
-    {
-      itemDescription: {
-        type: String,
-        required: true,
-      },
-      status: {
-        type: Boolean,
-        required: true,
-        default: false,
-      },
-      comments: {
-        type: String,
-        required: true,
-      },
-    }
-  ],
-  additionalNotes: {
+
+  reviewerComments: {
     type: String,
     required: true,
   },
-  activity: {
-    type: String,
-    required: true,
-  },
-  criteria: {
-    type: String,
-    required: true,
-  },
-  status: {
-    type: String,
-    required: true,
-  },
+
+  
   image: [],
 }, {
   timestamps: true,
