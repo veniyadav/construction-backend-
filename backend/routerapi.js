@@ -93,6 +93,8 @@ routerapi.use('/api/plantTool', require('./Router/plantToolRouter'));
 
 routerapi.use('/api/plantAuditReport', require('./Router/plantAuditReportRouter'));
 
+routerapi.use('/api/worker', require('./Router/workerRouter'));
+
 
 // <<<<<<< HEAD
 // // // Superadmin 
