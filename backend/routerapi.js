@@ -53,7 +53,7 @@ routerapi.use('/api/projects', require('./Router/projectsRouter'));
 
 routerapi.use('/api/category', require('./Router/categoryRouter'));
 
-routerapi.use('/api/clientDashboard', require('./Router/clientDashboardRouter'));
+routerapi.use('/api/clientPortal', require('./Router/clientPortalRouter'));
 
 routerapi.use('/api/reportAnalytics', require('./Router/reportAnalyticsRouter'));
 
