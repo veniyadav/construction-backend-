@@ -43,7 +43,8 @@ const SwmsSchema = new mongoose.Schema(
        
         required: false,
       }
-    }
+    },
+    status: { type: String },
   },
   {
     timestamps: true,
