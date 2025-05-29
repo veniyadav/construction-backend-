@@ -30,6 +30,20 @@ const SwmsSchema = new mongoose.Schema(
       
       required: true, // Ensure hazard identification must be selected
     },
+  
+
+   requiredPPE: {
+      predefined: {
+        type: [String], // Example: ["Hard Hat", "Safety Footwear"]
+        
+        required: true,
+      },
+      custom: {
+        type: [String], // Example: ["Face Shield", "Chemical Suit"]
+       
+        required: false,
+      }
+    }
   },
   {
     timestamps: true,
