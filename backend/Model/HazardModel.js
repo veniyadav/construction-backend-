@@ -30,6 +30,9 @@ const HazardSchema = new mongoose.Schema(
       
       required: true,
     },
+    
+    status: {type: String},
+    implementationDate: {type: String}
   },
   {
     timestamps: true, // Automatically adds createdAt and updatedAt fields
