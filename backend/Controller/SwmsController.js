@@ -12,6 +12,7 @@ const SwmsCreate = asyncHandler(async (req, res) => {
     workActivities,  // Added workActivities field
     hazardIdentification,  // Added hazardIdentification field
     requiredPPE,
+    status,
   } = req.body;
 
   // Ensure all fields are present
@@ -31,7 +32,9 @@ const SwmsCreate = asyncHandler(async (req, res) => {
     !workActivities || // Validate workActivities
     !hazardIdentification || // Validate hazardIdentification
     !requiredPPE ||
-    !Array.isArray(requiredPPE.predefined)
+    !Array.isArray(requiredPPE.predefined) ||
+    !status
+
   ) {
     return res.status(400).json({
       status: false,
@@ -50,6 +53,7 @@ const SwmsCreate = asyncHandler(async (req, res) => {
      workActivities,  // Include workActivities
     hazardIdentification,  // Include hazardIdentification
     requiredPPE,
+    status,
   });
 
   res.status(201).json({
@@ -124,6 +128,7 @@ const UpdateSwms = asyncHandler(async (req, res) => {
     workActivities,
     hazardIdentification,
     requiredPPE,
+    status,
   } = req.body;
 
   // Validate all required fields (same as create)
@@ -143,7 +148,8 @@ const UpdateSwms = asyncHandler(async (req, res) => {
     !workActivities ||
     !hazardIdentification ||
     !requiredPPE ||
-    !Array.isArray(requiredPPE.predefined)
+    !Array.isArray(requiredPPE.predefined) ||
+    !status
   ) {
     return res.status(400).json({
       status: false,
@@ -162,6 +168,7 @@ const UpdateSwms = asyncHandler(async (req, res) => {
     workActivities,
     hazardIdentification,
     requiredPPE,
+    status,
   };
 
   try {
