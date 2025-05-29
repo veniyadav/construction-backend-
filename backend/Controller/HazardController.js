@@ -8,15 +8,9 @@ const TasksManagement = require("../Model/TasksManagementModel");
 
 // CREATE Hazard
 const createHazard = asyncHandler(async (req, res) => {
-  const { hazardDescription, severityLevel, likelihood, additionalNotes, responsiblePerson, controlVerification } = req.body;
+  const { hazardDescription, severityLevel, likelihood, additionalNotes, responsiblePerson, controlVerification, status, implementationDate  } = req.body;
 
-//   // Validate if all required fields are provided
-//   if (!hazardDescription || !severityLevel || !likelihood || !additionalNotes || !responsiblePerson) {
-//     return res.status(400).json({
-//       status: false,
-//       message: "All fields are required",
-//     });
-//   }
+
 
   // Create a new hazard
   const newHazard = await Hazard.create({
@@ -25,7 +19,10 @@ const createHazard = asyncHandler(async (req, res) => {
     likelihood,
     additionalNotes,
     responsiblePerson,
-    controlVerification
+    controlVerification,
+    status,
+    implementationDate
+
   });
 
   res.status(201).json({
@@ -90,12 +87,12 @@ const getSingleHazard = async (req, res) => {
 // UPDATE Hazard
 const updateHazard = async (req, res) => {
   const { id } = req.params;
-  const { hazardDescription, severityLevel, likelihood, additionalNotes, responsiblePerson, controlVerification } = req.body;
+  const { hazardDescription, severityLevel, likelihood, additionalNotes, responsiblePerson, controlVerification, status, implementationDate } = req.body;
 
   try {
     const updatedHazard = await Hazard.findByIdAndUpdate(
       id,
-      { hazardDescription, severityLevel, likelihood, additionalNotes, responsiblePerson, controlVerification },
+      { hazardDescription, severityLevel, likelihood, additionalNotes, responsiblePerson, controlVerification, status, implementationDate },
       { new: true } // Return the updated document
     );
 
