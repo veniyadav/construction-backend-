@@ -11,6 +11,7 @@ const SwmsCreate = asyncHandler(async (req, res) => {
     companyInformation,
     workActivities,  // Added workActivities field
     hazardIdentification,  // Added hazardIdentification field
+    requiredPPE,
   } = req.body;
 
   // Ensure all fields are present
@@ -28,7 +29,9 @@ const SwmsCreate = asyncHandler(async (req, res) => {
     !companyInformation.principalContractor.contactPerson ||
     !companyInformation.principalContractor.contactNumber ||
     !workActivities || // Validate workActivities
-    !hazardIdentification // Validate hazardIdentification
+    !hazardIdentification || // Validate hazardIdentification
+    !requiredPPE ||
+    !Array.isArray(requiredPPE.predefined)
   ) {
     return res.status(400).json({
       status: false,
@@ -46,6 +49,7 @@ const SwmsCreate = asyncHandler(async (req, res) => {
     companyInformation,
      workActivities,  // Include workActivities
     hazardIdentification,  // Include hazardIdentification
+    requiredPPE,
   });
 
   res.status(201).json({
@@ -108,7 +112,7 @@ const deleteSwms = async (req, res) => {
 };
 
 // UPDATE SWMS
-const UpdateSwms = async (req, res) => {
+const UpdateSwms = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const {
     swmsName,
@@ -117,40 +121,54 @@ const UpdateSwms = async (req, res) => {
     responsiblePersonName,
     dateCreated,
     companyInformation,
-    workActivities,  // Added workActivities field
-    hazardIdentification,  // Added hazardIdentification field
+    workActivities,
+    hazardIdentification,
+    requiredPPE,
   } = req.body;
 
-  try {
-    const allowedFields = [
-      "swmsName",
-      "siteAddress",
-      "companyName",
-      "responsiblePersonName",
-      "dateCreated",
-      "companyInformation",
-      "workActivities",
-      "hazardIdentification",
-
-      
-    ];
-
-    const updateData = {};
-
-    allowedFields.forEach((field) => {
-      if (req.body[field] !== undefined) {
-        updateData[field] = req.body[field];
-      }
+  // Validate all required fields (same as create)
+  if (
+    !swmsName ||
+    !siteAddress ||
+    !companyName ||
+    !responsiblePersonName ||
+    !dateCreated ||
+    !companyInformation ||
+    !companyInformation.companyName ||
+    !companyInformation.address ||
+    !companyInformation.contactNumber ||
+    !companyInformation.principalContractor?.name ||
+    !companyInformation.principalContractor?.contactPerson ||
+    !companyInformation.principalContractor?.contactNumber ||
+    !workActivities ||
+    !hazardIdentification ||
+    !requiredPPE ||
+    !Array.isArray(requiredPPE.predefined)
+  ) {
+    return res.status(400).json({
+      status: false,
+      message: "All fields are required",
     });
+  }
 
-    if (Object.keys(updateData).length === 0) {
-      return res.status(400).json({
-        status: false,
-        message: "At least one field must be provided for update",
-      });
-    }
+  // Build update object with all fields
+  const updateData = {
+    swmsName,
+    siteAddress,
+    companyName,
+    responsiblePersonName,
+    dateCreated,
+    companyInformation,
+    workActivities,
+    hazardIdentification,
+    requiredPPE,
+  };
 
-    const updatedSwms = await Swms.findByIdAndUpdate(id, updateData, { new: true });
+  try {
+    const updatedSwms = await Swms.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true,  // Make sure mongoose validates update data too
+    });
 
     if (!updatedSwms) {
       return res.status(404).json({
@@ -171,7 +189,9 @@ const UpdateSwms = async (req, res) => {
       error: error.message,
     });
   }
-};
+});
+
+
 
 // GET SINGLE SWMS
 const SingleSwms = async (req, res) => {
@@ -190,6 +210,7 @@ const SingleSwms = async (req, res) => {
       message: "Fetched SWMS successfully",
       data: singleSwms,
     });
+
   } catch (error) {
     res.status(500).json({
       status: false,
@@ -201,4 +222,5 @@ const SingleSwms = async (req, res) => {
   
 
 
-  module.exports = {SwmsCreate,AllSwms,deleteSwms,UpdateSwms,SingleSwms};
+module.exports = {SwmsCreate,AllSwms,deleteSwms,UpdateSwms,SingleSwms};
+
