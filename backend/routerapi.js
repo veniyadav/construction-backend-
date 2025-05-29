@@ -95,6 +95,8 @@ routerapi.use('/api/plantAuditReport', require('./Router/plantAuditReportRouter'
 
 routerapi.use('/api/worker', require('./Router/workerRouter'));
 
+routerapi.use('/api/inductionTemplate', require('./Router/inductionTemplateRouter'));
+
 
 // <<<<<<< HEAD
 // // // Superadmin 
